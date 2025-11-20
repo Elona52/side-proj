@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.api.favorite.mapper.FavoriteMapper">
+
+    <!-- Favorite ResultMap (User_Favorite 테이블) -->
+    <resultMap id="FavoriteResultMap" type="com.api.favorite.domain.Favorite">
+        <id property="favoriteId" column="favorite_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="itemId" column="item_id"/>
+        <result property="createdAt" column="created_at"/>
+        <!-- 물건 정보 JOIN -->
+        <association property="item" javaType="com.api.item.domain.KamcoItem">
+            <id property="id" column="kamco_item_id"/>
+            <result property="cltrNo" column="cltr_no"/>
+            <result property="cltrNm" column="cltr_nm"/>
+            <result property="goodsNm" column="goods_nm"/>
+            <result property="minBidPrc" column="min_bid_prc"/>
+            <result property="apslAsesAvgAmt" column="apsl_ases_avg_amt"/>
+            <result property="pbctBegnDtm" column="pbct_begn_dtm"/>
+            <result property="pbctClsDtm" column="pbct_cls_dtm"/>
+            <result property="sido" column="sido"/>
+            <result property="nmrdAdrs" column="nmrd_adrs"/>
+            <result property="ldnmAdrs" column="ldnm_adrs"/>
+            <result property="scrnGrpCd" column="scrn_grp_cd"/>
+            <result property="ctgrFullNm" column="ctgr_full_nm"/>
+        </association>
+    </resultMap>
+
+    <!-- PriceAlert ResultMap -->
+    <resultMap id="PriceAlertResultMap" type="com.api.favorite.domain.PriceAlert">
+        <id property="id" column="id"/>
+        <result property="favoriteId" column="favorite_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="itemPlnmNo" column="item_plnm_no"/>
+        <result property="previousPrice" column="previous_price"/>
+        <result property="newPrice" column="new_price"/>
+        <result property="alertSent" column="alert_sent"/>
+        <result property="sentDate" column="sent_date"/>
+        <result property="createdDate" column="created_date"/>
+    </resultMap>
+
+    <!-- 즐겨찾기 추가 -->
+    <insert id="insertFavorite" parameterType="com.api.favorite.domain.Favorite" 
+            useGeneratedKeys="true" keyProperty="favoriteId">
+        INSERT INTO User_Favorite (user_id, item_id)
+        VALUES (#{userId}, #{itemId})
+        <!-- 
+            디버깅: 실제 실행되는 SQL 확인
+            INSERT INTO User_Favorite (user_id, item_id) VALUES (?, ?)
+        -->
+    </insert>
+
+    <!-- 즐겨찾기 삭제 -->
+    <delete id="deleteFavorite">
+        DELETE FROM User_Favorite WHERE favorite_id = #{id}
+    </delete>
+
+    <!-- ID로 즐겨찾기 조회 -->
+    <select id="getFavoriteById" resultMap="FavoriteResultMap">
+        SELECT 
+            f.favorite_id,
+            f.user_id,
+            f.item_id,
+            f.created_at,
+            i.id AS kamco_item_id,
+            i.cltr_no,
+            i.cltr_nm,
+            i.goods_nm,
+            i.min_bid_prc,
+            i.apsl_ases_avg_amt,
+            i.pbct_begn_dtm,
+            i.pbct_cls_dtm,
+            i.sido,
+            i.nmrd_adrs,
+            i.ldnm_adrs,
+            i.scrn_grp_cd,
+            i.ctgr_full_nm
+        FROM User_Favorite f
+        LEFT JOIN KNKamcoItem i ON f.item_id = i.id
+        WHERE f.favorite_id = #{id}
+    </select>
+
+    <!-- 특정 회원의 즐겨찾기 목록 조회 (물건 정보 포함) -->
+    <select id="getFavoritesByMemberId" resultMap="FavoriteResultMap">
+        SELECT 
+            f.favorite_id,
+            f.user_id,
+            f.item_id,
+            f.created_at,
+            i.id AS kamco_item_id,
+            i.cltr_no,
+            i.cltr_nm,
+            i.goods_nm,
+            i.min_bid_prc,
+            i.apsl_ases_avg_amt,
+            i.pbct_begn_dtm,
+            i.pbct_cls_dtm,
+            i.sido,
+            i.nmrd_adrs,
+            i.ldnm_adrs,
+            i.scrn_grp_cd,
+            i.ctgr_full_nm
+        FROM User_Favorite f
+        LEFT JOIN KNKamcoItem i ON f.item_id = i.id
+        WHERE f.user_id = #{memberId} 
+        ORDER BY f.created_at DESC
+    </select>
+
+    <!-- 특정 회원의 특정 물건 즐겨찾기 조회 -->
+    <select id="getFavoriteByMemberAndItem" resultMap="FavoriteResultMap">
+        SELECT 
+            f.favorite_id,
+            f.user_id,
+            f.item_id,
+            f.created_at,
+            i.id AS kamco_item_id,
+            i.cltr_no,
+            i.cltr_nm,
+            i.goods_nm,
+            i.min_bid_prc,
+            i.apsl_ases_avg_amt,
+            i.pbct_begn_dtm,
+            i.pbct_cls_dtm,
+            i.sido,
+            i.nmrd_adrs,
+            i.ldnm_adrs,
+            i.scrn_grp_cd,
+            i.ctgr_full_nm
+        FROM User_Favorite f
+        LEFT JOIN KNKamcoItem i ON f.item_id = i.id
+        WHERE f.user_id = #{memberId} AND f.item_id = #{itemId}
+    </select>
+
+    <!-- item_id로 즐겨찾기 조회 (cltrNo 대신 itemId 사용) -->
+    <select id="getFavoriteByMemberAndItemId" resultMap="FavoriteResultMap">
+        SELECT 
+            f.favorite_id,
+            f.user_id,
+            f.item_id,
+            f.created_at,
+            i.id AS kamco_item_id,
+            i.cltr_no,
+            i.cltr_nm,
+            i.goods_nm,
+            i.min_bid_prc,
+            i.apsl_ases_avg_amt,
+            i.pbct_begn_dtm,
+            i.pbct_cls_dtm,
+            i.sido,
+            i.nmrd_adrs,
+            i.ldnm_adrs,
+            i.scrn_grp_cd,
+            i.ctgr_full_nm
+        FROM User_Favorite f
+        LEFT JOIN KNKamcoItem i ON f.item_id = i.id
+        WHERE f.user_id = #{memberId} AND f.item_id = #{itemId}
+    </select>
+
+    <!-- 알림이 활성화된 모든 즐겨찾기 조회 (기존 기능 유지용 - 사용 안 함) -->
+    <select id="getActiveAlertFavorites" resultMap="FavoriteResultMap">
+        SELECT * FROM User_Favorite
+    </select>
+
+    <!-- 가격 알림 히스토리 추가 -->
+    <insert id="insertPriceAlert" parameterType="com.api.favorite.domain.PriceAlert"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO KNPriceAlert (favorite_id, member_id, item_plnm_no, 
+                                  previous_price, new_price, alert_sent, sent_date)
+        VALUES (#{favoriteId}, #{memberId}, #{itemPlnmNo}, 
+                #{previousPrice}, #{newPrice}, #{alertSent}, #{sentDate})
+    </insert>
+
+    <!-- 특정 회원의 가격 알림 히스토리 조회 -->
+    <select id="getPriceAlertsByMemberId" resultMap="PriceAlertResultMap">
+        SELECT * FROM KNPriceAlert
+        WHERE member_id = #{memberId}
+        ORDER BY created_date DESC
+    </select>
+
+    <!-- 최근 알림 조회 (중복 알림 방지용) -->
+    <select id="getLastPriceAlertByFavoriteId"
+            resultMap="PriceAlertResultMap">
+        SELECT *
+        FROM KNPriceAlert
+        WHERE favorite_id = #{favoriteId}
+        ORDER BY sent_date DESC
+        LIMIT 1
+    </select>
+
+</mapper>

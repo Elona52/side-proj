@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.api.auction.mapper.AuctionMapper">
+
+	<insert id="insertAuction" parameterType="com.api.auction.domain.Auction">
+		INSERT INTO KNAuction
+				(id, name, content, regdate, startdate, enddate, startprice, endprice, img, count)
+			VALUES 
+				(#{id}, #{name}, #{content}, SYSDATE(), 
+				#{startDate}, #{endDate}, #{startPrice}, #{startPrice}, #{img}, 0)
+	</insert>
+
+	<select id="getAuctionList" parameterType="java.util.HashMap" resultType="com.api.auction.domain.Auction">
+		SELECT 
+			no,
+			id,
+			name,
+			content,
+			regdate AS regDate,
+			startdate AS startDate,
+			enddate AS endDate,
+			startprice AS startPrice,
+			endprice AS endPrice,
+			img,
+			buyer,
+			count
+		FROM KNAuction
+			<choose>
+				<when test="period == 'progress'">
+					WHERE startDate &lt; CURRENT_TIMESTAMP()
+						AND endDate &gt; CURRENT_TIMESTAMP()
+						<if test="keyword != null">
+							AND (id LIKE CONCAT('%', #{keyword}, '%')
+								OR name LIKE CONCAT('%', #{keyword}, '%'))
+						</if>
+				</when>
+				<when test="period == 'upcoming'">
+					WHERE startDate &gt; CURRENT_TIMESTAMP()
+						<if test="keyword != null">
+							AND (id LIKE CONCAT('%', #{keyword}, '%')
+								OR name LIKE CONCAT('%', #{keyword}, '%'))
+						</if>
+				</when>
+				<when test="period == 'expire'">
+					WHERE endDate &lt; CURRENT_TIMESTAMP()
+						<if test="keyword != null">
+							AND (id LIKE CONCAT('%', #{keyword}, '%')
+								OR name LIKE CONCAT('%', #{keyword}, '%'))
+						</if>
+				</when>
+			</choose>
+			<choose>
+				<when test="printType == null">
+					ORDER BY no DESC
+				</when>
+				<when test="printType == 'new'">
+					ORDER BY no DESC
+				</when>
+				<when test="printType == 'endDateUp'">
+					ORDER BY endDate
+				</when>
+				<when test="printType == 'endDateDown'">
+					ORDER BY endDate DESC
+				</when>
+				<when test="printType == 'priceUp'">
+					ORDER BY endPrice
+				</when>
+				<when test="printType == 'priceDown'">
+					ORDER BY endPrice DESC
+				</when>
+				<when test="printType == 'countUp'">
+					ORDER BY count
+				</when>
+				<when test="printType == 'countDown'">
+					ORDER BY count DESC
+				</when>
+			</choose>
+			LIMIT #{startPage}, #{num}
+	</select>
+
+	<select id="getAuction" resultType="com.api.auction.domain.Auction">
+		SELECT 
+			no,
+			id,
+			name,
+			content,
+			regdate AS regDate,
+			startdate AS startDate,
+			enddate AS endDate,
+			startprice AS startPrice,
+			endprice AS endPrice,
+			img,
+			buyer,
+			count
+		FROM KNAuction
+			WHERE no = #{no}
+	</select>
+
+	<update id="updateEndPrice" parameterType="java.util.HashMap">
+		UPDATE KNAuction
+			SET 
+				endprice = #{endPrice},
+				buyer = #{buyer},
+				count = count + 1,
+				bidder = JSON_SET(COALESCE(bidder, '{}'), CONCAT('$.', #{buyer}), #{endPrice})
+			WHERE no = #{no}
+	</update>
+
+	<update id="updateAuction" parameterType="com.api.auction.domain.Auction">
+		UPDATE KNAuction
+			SET
+				name = #{name},
+				content = #{content},
+				regdate = SYSDATE(),
+				startdate = #{startDate},
+				enddate = #{endDate},
+				startprice = #{startPrice}
+				<if test="img != null">
+					, img = #{img}
+				</if>
+			WHERE no = #{no}
+	</update>
+
+	<delete id="deleteAuction">
+		DELETE FROM KNAuction WHERE no = #{no}
+	</delete>
+
+	<insert id="insertBoard" parameterType="com.api.auction.domain.FindBoard">
+		INSERT INTO KNfind
+			(id, title, content, reg_date)
+			VALUES (#{id}, #{title}, #{content}, NOW())
+	</insert>
+
+	<select id="getBoardList" parameterType="java.util.HashMap" resultMap="boardResultMap">
+	    SELECT * FROM KNfind
+	    <where>
+	        <if test="category != null and category != 'all'">
+	            AND category = #{category}
+	        </if>
+	        <if test="id == null">
+	            <if test="keyword != null and keyword != ''">
+	                AND (id LIKE CONCAT('%', #{keyword}, '%')
+	                OR title LIKE CONCAT('%', #{keyword}, '%')
+	                OR content LIKE CONCAT('%', #{keyword}, '%'))
+	            </if>
+	        </if>
+	        <if test="id != null">
+	            AND id = #{id}
+	        </if>
+	    </where>
+	    ORDER BY no DESC
+	</select>
+
+	<select id="getBoard" resultMap="boardResultMap">
+		SELECT *
+		FROM KNfind
+			WHERE no = #{no}
+	</select>
+
+	<update id="updateBoard" parameterType="com.api.auction.domain.FindBoard">
+		UPDATE KNfind
+			SET
+				title = #{title},
+				content = #{content},
+				category = COALESCE(#{category}, category),
+				related_link = #{relatedLink},
+				reg_date = SYSDATE()
+			WHERE no = #{no}
+	</update>
+	
+	<update id="incrementBoardViews">
+		UPDATE KNfind
+			SET views = views + 1
+			WHERE no = #{no}
+	</update>
+
+	<delete id="deleteBoard">
+		DELETE FROM KNfind WHERE no = #{no}
+	</delete>
+
+	<insert id="insertReply" parameterType="com.api.auction.domain.Reply">
+		INSERT INTO KNReply
+			(id, content, reg_date, board_no)
+			VALUES (#{id}, #{content}, SYSDATE(), #{boardNo})
+	</insert>
+
+	<update id="updateReply" parameterType="com.api.auction.domain.Reply">
+		UPDATE KNReply
+			SET 
+				content = #{content},
+				reg_date = SYSDATE()
+			WHERE no = #{no}
+	</update>
+
+	<delete id="deleteReply">
+		DELETE FROM KNReply WHERE no = #{no}
+	</delete>
+
+	<select id="getReplyList" parameterType="java.util.HashMap" resultMap="replyResultMap">
+		SELECT * FROM KNReply 
+			WHERE board_no = #{boardNo}
+			ORDER BY no DESC
+	</select>
+
+	<select id="getMyAuctionList" parameterType="java.util.HashMap" resultType="com.api.auction.domain.Auction">
+		SELECT 
+			no,
+			id,
+			name,
+			content,
+			regDate,
+			startDate,
+			endDate,
+			startPrice,
+			endPrice,
+			img,
+			buyer,
+			count
+		FROM KNAuction
+			<choose>
+				<when test="option == 'bid'">
+					WHERE JSON_extract(bidder, CONCAT('$**.', #{id})) IS NOT NULL
+				</when>
+				<when test="option == 'exhibit'">
+					WHERE id = #{id}
+				</when>
+			</choose>
+	</select>
+
+	<select id="getAuctionCount" parameterType="java.util.HashMap" resultType="int">
+	    SELECT count(*) FROM KNAuction
+	    <choose>
+	        <when test="period == 'progress'">
+	            WHERE startDate &lt; CURRENT_TIMESTAMP()
+	                AND endDate &gt; CURRENT_TIMESTAMP()
+	                <if test="keyword != null">
+	                    AND (id LIKE CONCAT('%', #{keyword}, '%')
+	                        OR name LIKE CONCAT('%', #{keyword}, '%'))
+	                </if>
+	        </when>
+	        <when test="period == 'upcoming'">
+	            WHERE startDate &gt; CURRENT_TIMESTAMP()
+	                <if test="keyword != null">
+	                    AND (id LIKE CONCAT('%', #{keyword}, '%')
+	                        OR name LIKE CONCAT('%', #{keyword}, '%'))
+	                </if>
+	        </when>
+	        <when test="period == 'expire'">
+	            WHERE endDate &lt; CURRENT_TIMESTAMP()
+	                <if test="keyword != null">
+	                    AND (id LIKE CONCAT('%', #{keyword}, '%')
+	                        OR name LIKE CONCAT('%', #{keyword}, '%'))
+	                </if>
+	        </when>
+	    </choose>
+	</select>
+
+	<select id="getCommissionList" resultType="com.api.auction.domain.Auction">
+		SELECT 
+			no,
+			id,
+			name,
+			endDate,
+			endPrice,
+			buyer,
+			deposit_status AS depositStatus,
+			deposit_date AS depositDate,
+			delivery_status AS deliveryStatus,
+			delivery_date AS deliveryDate,
+			remit_status AS remitStatus,
+			remit_date AS remitDate
+		FROM KNAuction
+			WHERE endDate &lt; CURRENT_TIMESTAMP()
+				AND buyer IS NOT NULL
+			ORDER BY endDate DESC
+	</select>
+
+	<resultMap type="com.api.auction.domain.FindBoard" id="boardResultMap">
+		<id property="no" column="no"/>
+		<result property="id" column="id"/>
+		<result property="title" column="title"/>
+		<result property="content" column="content"/>
+		<result property="category" column="category"/>
+		<result property="views" column="views"/>
+		<result property="relatedLink" column="related_link"/>
+		<result property="regDate" column="reg_date"/>
+	</resultMap>
+
+	<resultMap type="com.api.auction.domain.Reply" id="replyResultMap">
+		<id property="no" column="no"/>
+		<result property="id" column="id"/>
+		<result property="content" column="content"/>
+		<result property="regDate" column="reg_date"/>
+		<result property="boardNo" column="board_no"/>
+	</resultMap>
+
+</mapper>
+
+

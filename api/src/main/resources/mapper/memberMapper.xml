@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="com.api.member.mapper.MemberMapper" >
+
+	<insert id="insertMember" parameterType="com.api.member.domain.Member">
+		INSERT INTO KNMember
+				(id, pass, name, phone, mail, zipcode, address1, address2, 
+					marketing, joindate, modificationdate, type)
+			VALUES
+				(#{id}, #{pass}, #{name}, #{phone}, #{mail}, #{zipcode}, #{address1}, #{address2}, 
+					#{marketing}, NOW(), NOW(), #{type})
+	</insert>
+	
+	<update id="updateMember" parameterType="com.api.member.domain.Member">
+		UPDATE KNMember
+			SET 
+				pass = #{pass},
+				name = #{name},
+				phone = #{phone},
+				zipcode = #{zipcode},
+				address1 = #{address1},
+				address2 = #{address2},
+				marketing = #{marketing},
+				modificationdate = NOW()
+			WHERE id = #{id}
+	</update>
+	
+	<select id="getMemberInfo" resultType="com.api.member.domain.Member" resultMap="memberResultMap">
+		SELECT * FROM KNMember
+			WHERE id = #{id}
+	</select>
+	
+	
+	
+	<resultMap type="com.api.member.domain.Member" id="memberResultMap">
+		<id property="id" column="id"/>
+		<result property="pass" column="pass"/>
+		<result property="name" column="name"/>
+		<result property="phone" column="phone"/>
+		<result property="mail" column="mail" />
+		<result property="zipcode" column="zipcode"/>
+		<result property="address1" column="address1"/>
+		<result property="address2" column="address2"/>
+		<result property="marketing" column="marketing"/>
+		<result property="joinDate" column="joindate"/>
+		<result property="modificationDate" column="modificationdate"/>
+		<result property="type" column="type"/>
+	</resultMap>
+	
+
+
+</mapper>
+

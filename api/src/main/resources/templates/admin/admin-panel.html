@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Management Page</title>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/auction.css}">
+    <link rel="stylesheet" th:href="@{/css/kamco.css}">
+    
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            font-family: 'Nanum Gothic', 'Malgun Gothic', sans-serif;
+            background: #f5f5f5;
+        }
+
+        body {
+            padding: 20px;
+        }
+        
+        .button-bar {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            background: #f9f9f9;
+        }
+        
+        .button-bar button {
+            padding: 8px 15px;
+            cursor: pointer;
+            border: 1px solid #666;
+            background: white;
+            font-size: 14px;
+        }
+        
+        .button-bar button:hover {
+            background: #f0f0f0;
+        }
+        
+        .content-area {
+            border: 1px solid #ddd;
+            padding: 20px;
+            min-height: 400px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 13px;
+            border-radius: 0;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            white-space: nowrap;
+            border-radius: 0;
+        }
+        
+        th {
+            background: #f0f0f0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            overflow-x: auto;
+            border: 1px solid #ddd;
+        }
+        
+        .member-actions button {
+            margin-right: 5px;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- =================== 헤더 =================== -->
+<div th:replace="~{layout/header :: header}"></div>
+    <h1>Admin Management Panel</h1>
+    
+    <!-- 상단 버튼 바 -->
+    <div class="button-bar">
+        <button onclick="apiListTable()">API목록조회</button>
+        <button onclick="apiDataRaw()">API데이터조회</button>
+		
+        <button onclick="saveToDb()">조회된데이터DB저장</button>
+
+        <button onclick="dbList()">조회된데이터(DB)</button>
+        <button onclick="dbDataRaw()">DB데이터</button>
+        <button onclick="dbDelete()">DB삭제</button>
+		
+        <button onclick="newItemsApiList()">신규물건API목록조회</button>
+        <button onclick="saveNewItemsToDb()">신규물건DB저장</button>
+		
+        <button onclick="memberList()">회원목록</button>
+        <button onclick="boardList()">게시글목록</button>
+    </div>
+    
+    <!-- 하단 내용 표시 영역 -->
+    <div class="content-area" id="contentArea">
+        <p style="color: #999;">버튼을 클릭하면 여기에 내용이 표시됩니다.</p>
+    </div>
+
+    <script>
+        const API_BASE = '/api/admin';
+        
+        // 1. API 목록 조회 (표로) - 전체 데이터, 100개씩, 페이지네이션
+        let currentApiPage = 1;
+        let currentApiTotal = 0;
+        
+        function apiListTable(page = 1) {
+            showLoading();
+            currentApiPage = page;
+            
+            fetch(API_BASE + '/db/items-seoul?page=' + page + '&size=100')
+                .then(r => r.json())
+                .then(data => {
+                    let html = '<h2>API 목록 조회 (표 형태) - 서울특별시</h2>';
+                    html += '<p>총 ' + (data.totalCount || 0) + '개 (서울특별시만, 페이지당 100개)</p>';
+                    
+                    if (data.items && data.items.length > 0) {
+                        html += '<div style="overflow-x: auto;">';
+                        html += '<table><thead><tr>';
+                        html += '<th>ID</th><th>순번</th><th>물건번호</th><th>기관명</th><th>물건명</th>';
+                        html += '<th>지역</th><th>도로명</th><th>건물번호</th>';
+                        html += '<th>최저입찰가</th><th>감정평가액</th><th>입찰종료</th>';
+                        html += '<th>상태</th><th>유찰</th><th>조회수</th>';
+                        html += '</tr></thead><tbody>';
+                        
+                        data.items.forEach(item => {
+                            html += '<tr>';
+                            html += '<td>' + item.id + '</td>';
+                            html += '<td>' + (item.rnum || '-') + '</td>';
+                            html += '<td>' + item.cltrNo + '</td>';
+                            html += '<td>' + (item.orgNm || '-') + '</td>';
+                            html += '<td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + (item.cltrNm || '-') + '</td>';
+                            html += '<td>' + (item.sido || '-') + '</td>';
+                            html += '<td>' + (item.rodNm || '-') + '</td>';
+                            html += '<td>' + (item.bldNo || '-') + '</td>';
+                            html += '<td style="text-align:right;">' + (item.minBidPrc ? item.minBidPrc.toLocaleString() + '원' : '-') + '</td>';
+                            html += '<td style="text-align:right;">' + (item.apslAsesAvgAmt ? item.apslAsesAvgAmt.toLocaleString() + '원' : '-') + '</td>';
+                            html += '<td>' + formatDate(item.pbctClsDtm) + '</td>';
+                            html += '<td>' + (item.pbctCltrStatNm || '-') + '</td>';
+                            html += '<td>' + (item.uscbCnt || 0) + '</td>';
+                            html += '<td>' + (item.iqryCnt || item.viewCount || 0) + '</td>';
+                            html += '</tr>';
+                        });
+                        
+                        html += '</tbody></table></div>';
+                        
+                        // 페이지네이션
+                        const totalCount = data.totalCount || 0;
+                        const pageSize = 100;
+                        const totalPages = Math.ceil(totalCount / pageSize);
+                        currentApiTotal = totalCount;
+                        
+                        html += '<div style="margin-top: 20px; text-align: center;">';
+                        html += '<div style="display: inline-block;">';
+                        
+                        // 이전 페이지
+                        if (page > 1) {
+                            html += '<button onclick="apiListTable(' + (page - 1) + ')" style="padding: 8px 15px; margin: 0 5px;">이전</button>';
+                        }
+                        
+                        // 페이지 번호
+                        const startPage = Math.max(1, page - 5);
+                        const endPage = Math.min(totalPages, page + 5);
+                        
+                        if (startPage > 1) {
+                            html += '<button onclick="apiListTable(1)" style="padding: 8px 15px; margin: 0 2px;">1</button>';
+                            if (startPage > 2) html += '<span style="margin: 0 5px;">...</span>';
+                        }
+                        
+                        for (let i = startPage; i <= endPage; i++) {
+                            if (i === page) {
+                                html += '<button onclick="apiListTable(' + i + ')" style="padding: 8px 15px; margin: 0 2px; background: #004098; color: white; font-weight: bold;">' + i + '</button>';
+                            } else {
+                                html += '<button onclick="apiListTable(' + i + ')" style="padding: 8px 15px; margin: 0 2px;">' + i + '</button>';
+                            }
+                        }
+                        
+                        if (endPage < totalPages) {
+                            if (endPage < totalPages - 1) html += '<span style="margin: 0 5px;">...</span>';
+                            html += '<button onclick="apiListTable(' + totalPages + ')" style="padding: 8px 15px; margin: 0 2px;">' + totalPages + '</button>';
+                        }
+                        
+                        // 다음 페이지
+                        if (page < totalPages) {
+                            html += '<button onclick="apiListTable(' + (page + 1) + ')" style="padding: 8px 15px; margin: 0 5px;">다음</button>';
+                        }
+                        
+                        html += '</div>';
+                        html += '<p style="margin-top: 10px; color: #666;">페이지 ' + page + ' / ' + totalPages + ' (총 ' + totalCount + '개)</p>';
+                        html += '</div>';
+                    } else {
+                        html += '<p>데이터 없음</p>';
+                    }
+                    
+                    document.getElementById('contentArea').innerHTML = html;
+                });
+        }
+        
+        // 2. API 데이터 조회 (원래 형태)
+        function apiDataRaw() {
+            showLoading();
+            
+            fetch(API_BASE + '/db/items?page=1&size=10')
+                .then(r => r.json())
+                .then(data => {
+                    let html = '<h2>API 데이터 조회 (원래 형태)</h2>';
+                    html += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                    document.getElementById('contentArea').innerHTML = html;
+                });
+        }
+        
+        // 3. 조회된 데이터 DB 저장
+        function saveToDb() {
+            let html = '<h2>조회된 데이터 DB 저장</h2>';
+            html += '<p><strong>단건 저장:</strong></p>';
+            html += '<input type="text" id="saveInput" placeholder="물건번호 입력" style="padding:8px; width:200px;"> ';
+            html += '<button onclick="executeSave()" style="padding:8px 15px;">저장</button>';
+            html += '<hr style="margin:20px 0;">';
+            html += '<p><strong>일괄 저장:</strong></p>';
+            html += '<div style="display:flex; gap:10px; margin-bottom:10px;">';
+            html += '<button onclick="executeSaveAllSeoul()" style="padding:10px 20px; background:#3498db; color:white; font-weight:bold; border:none; cursor:pointer; border-radius:5px;">';
+            html += '📍 서울특별시 전체 물건 저장';
+            html += '</button>';
+            html += '<button onclick="executeSaveNewItems()" style="padding:10px 20px; background:#27ae60; color:white; font-weight:bold; border:none; cursor:pointer; border-radius:5px;">';
+            html += '✨ 신규 물건 저장';
+            html += '</button>';
+            html += '</div>';
+            html += '<p style="color:#666; font-size:12px; margin-top:5px;">';
+            html += '• 서울특별시 전체: 용도별 물건 전체 저장 (최대 수 분 소요)<br>';
+            html += '• 신규 물건: 최근 등록된 신규 물건만 저장 (상대적으로 빠름)';
+            html += '</p>';
+            html += '<div id="saveResultArea" style="margin-top:20px;"></div>';
+            document.getElementById('contentArea').innerHTML = html;
+        }
+
+        function executeSave() {
+            const cltrNo = document.getElementById('saveInput').value;
+            if (!cltrNo) {
+                alert('물건번호를 입력하세요');
+                return;
+            }
+            
+            document.getElementById('saveResultArea').innerHTML = '<p>저장 중... (API 호출 및 DB 저장 중입니다. 최대 20초 정도 소요될 수 있습니다.)</p>';
+            
+            const startTime = Date.now();
+            fetch(API_BASE + '/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ cltrNo: cltrNo })
+            })
+                .then(r => {
+                    if (!r.ok) {
+                        throw new Error('서버 오류: ' + r.status + ' ' + r.statusText);
+                    }
+                    return r.json();
+                })
+                .then(data => {
+                    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                    let resultHtml = '<p style="color: green;">✅ 저장 완료! (소요 시간: ' + elapsed + '초)</p>';
+                    resultHtml += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                    document.getElementById('saveResultArea').innerHTML = resultHtml;
+                })
+                .catch(error => {
+                    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                    document.getElementById('saveResultArea').innerHTML = 
+                        '<p style="color: red;">❌ 저장 실패 (소요 시간: ' + elapsed + '초)</p>' +
+                        '<p style="color: red;">오류: ' + error.message + '</p>';
+                    console.error('저장 오류:', error);
+                });
+        }
+        
+        // 서울특별시 전체 물건 저장
+        function executeSaveAllSeoul() {
+            if (!confirm('서울특별시 전체 물건을 DB에 저장하시겠습니까?\n\n이 작업은 시간이 오래 걸릴 수 있습니다 (최대 수 분).')) return;
+            
+            document.getElementById('saveResultArea').innerHTML = 
+                '<p style="color:#3498db; font-weight:bold;">📍 서울특별시 전체 물건 저장 중...</p>' +
+                '<p>API에서 데이터를 가져와 DB에 저장하고 있습니다. 최대 수 분 소요될 수 있습니다.</p>' +
+                '<p style="color:#666; font-size:12px;">진행 상황은 서버 로그를 확인하세요.</p>';
+            
+            const startTime = Date.now();
+            fetch(API_BASE + '/save-batch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sido: '서울특별시',
+                    type: 'all'
+                })
+            })
+                .then(r => {
+                    if (!r.ok) {
+                        throw new Error('서버 오류: ' + r.status + ' ' + r.statusText);
+                    }
+                    return r.json();
+                })
+                .then(data => {
+                    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                    const minutes = Math.floor(elapsed / 60);
+                    const seconds = (elapsed % 60).toFixed(1);
+                    const timeText = minutes > 0 ? minutes + '분 ' + seconds + '초' : elapsed + '초';
+                    
+                    let resultHtml = '<p style="color: green; font-weight:bold;">✅ 서울특별시 전체 물건 저장 완료! (소요 시간: ' + timeText + ')</p>';
+                    resultHtml += '<p style="color: green;">저장된 개수: ' + (data.savedCount || 0) + '개 / 요청한 개수: ' + (data.totalRequested || 0) + '개</p>';
+                    resultHtml += '<pre style="background:#f5f5f5; padding:10px; border-radius:5px; overflow:auto;">' + JSON.stringify(data, null, 2) + '</pre>';
+                    document.getElementById('saveResultArea').innerHTML = resultHtml;
+                })
+                .catch(error => {
+                    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                    document.getElementById('saveResultArea').innerHTML = 
+                        '<p style="color: red; font-weight:bold;">❌ 서울특별시 전체 물건 저장 실패 (소요 시간: ' + elapsed + '초)</p>' +
+                        '<p style="color: red;">오류: ' + error.message + '</p>' +
+                        '<p style="color:#666; font-size:12px;">서버 로그를 확인하거나 잠시 후 다시 시도해주세요.</p>';
+                    console.error('서울특별시 전체 저장 오류:', error);
+                });
+        }
+        
+        // 신규 물건 저장
+        function executeSaveNewItems() {
+            if (!confirm('신규 물건을 DB에 저장하시겠습니까?\n\n최근 등록된 신규 물건만 저장합니다.')) return;
+            
+            document.getElementById('saveResultArea').innerHTML = 
+                '<p style="color:#27ae60; font-weight:bold;">✨ 신규 물건 저장 중...</p>' +
+                '<p>API에서 신규 물건 데이터를 가져와 DB에 저장하고 있습니다.</p>' +
+                '<p style="color:#666; font-size:12px;">진행 상황은 서버 로그를 확인하세요.</p>';
+            
+            const startTime = Date.now();
+            fetch(API_BASE + '/save-new-items-batch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sido: '서울특별시'
+                })
+            })
+                .then(r => {
+                    if (!r.ok) {
+                        throw new Error('서버 오류: ' + r.status + ' ' + r.statusText);
+                    }
+                    return r.json();
+                })
+                .then(data => {
+                    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                    const minutes = Math.floor(elapsed / 60);
+                    const seconds = (elapsed % 60).toFixed(1);
+                    const timeText = minutes > 0 ? minutes + '분 ' + seconds + '초' : elapsed + '초';
+                    
+                    let resultHtml = '<p style="color: green; font-weight:bold;">✅ 신규 물건 저장 완료! (소요 시간: ' + timeText + ')</p>';
+                    resultHtml += '<p style="color: green;">저장된 개수: ' + (data.savedCount || 0) + '개</p>';
+                    resultHtml += '<pre style="background:#f5f5f5; padding:10px; border-radius:5px; overflow:auto;">' + JSON.stringify(data, null, 2) + '</pre>';
+                    document.getElementById('saveResultArea').innerHTML = resultHtml;
+                })
+                .catch(error => {
+                    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                    document.getElementById('saveResultArea').innerHTML = 
+                        '<p style="color: red; font-weight:bold;">❌ 신규 물건 저장 실패 (소요 시간: ' + elapsed + '초)</p>' +
+                        '<p style="color: red;">오류: ' + error.message + '</p>' +
+                        '<p style="color:#666; font-size:12px;">서버 로그를 확인하거나 잠시 후 다시 시도해주세요.</p>';
+                    console.error('신규 물건 저장 오류:', error);
+                });
+        }
+        
+        // 4. 조회된 데이터 (DB에서) - 서울특별시만, 50개
+        function dbList() {
+            showLoading();
+            
+            fetch(API_BASE + '/db/items-seoul?page=1&size=50')
+                .then(r => r.json())
+                .then(data => {
+                    let html = '<h2>DB 저장 데이터 조회 (표 형태) - 서울특별시</h2>';
+                    html += '<p>총 ' + (data.totalCount || 0) + '개 (서울특별시 표시)</p>';
+                    
+                    if (data.items && data.items.length > 0) {
+                        html += '<div style="overflow-x: auto;">';
+                        html += '<table><thead><tr>';
+                        html += '<th>ID</th><th>순번</th><th>물건번호</th><th>기관명</th><th>물건명</th>';
+                        html += '<th>지역</th><th>도로명</th><th>건물번호</th>';
+                        html += '<th>최저입찰가</th><th>감정평가액</th><th>입찰종료</th>';
+                        html += '<th>상태</th><th>유찰</th><th>조회수</th>';
+                        html += '</tr></thead><tbody>';
+                        
+                        data.items.forEach(item => {
+                            html += '<tr>';
+                            html += '<td>' + item.id + '</td>';
+                            html += '<td>' + (item.rnum || '-') + '</td>';
+                            html += '<td>' + item.cltrNo + '</td>';
+                            html += '<td>' + (item.orgNm || '-') + '</td>';
+                            html += '<td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + (item.cltrNm || '-') + '</td>';
+                            html += '<td>' + (item.sido || '-') + '</td>';
+                            html += '<td>' + (item.rodNm || '-') + '</td>';
+                            html += '<td>' + (item.bldNo || '-') + '</td>';
+                            html += '<td style="text-align:right;">' + (item.minBidPrc ? item.minBidPrc.toLocaleString() + '원' : '-') + '</td>';
+                            html += '<td style="text-align:right;">' + (item.apslAsesAvgAmt ? item.apslAsesAvgAmt.toLocaleString() + '원' : '-') + '</td>';
+                            html += '<td>' + formatDate(item.pbctClsDtm) + '</td>';
+                            html += '<td>' + (item.pbctCltrStatNm || '-') + '</td>';
+                            html += '<td>' + (item.uscbCnt || 0) + '</td>';
+                            html += '<td>' + (item.iqryCnt || item.viewCount || 0) + '</td>';
+                            html += '</tr>';
+                        });
+                        
+                        html += '</tbody></table></div>';
+                    } else {
+                        html += '<p>데이터 없음</p>';
+                    }
+                    
+                    document.getElementById('contentArea').innerHTML = html;
+                });
+        }
+        
+        // 신규 물건 API 목록 조회 (표로) - 페이지네이션
+        let currentNewItemsPage = 1;
+        
+        function newItemsApiList(page = 1) {
+            showLoading();
+            currentNewItemsPage = page;
+            
+            fetch(API_BASE + '/api/new-items?page=' + page + '&size=100&sido=서울특별시')
+                .then(r => r.json())
+                .then(data => {
+                    let html = '<h2>신규 물건 API 목록 조회</h2>';
+                    html += '<p>총 ' + (data.totalCount || 0) + '개 (페이지당 100개)</p>';
+                    
+                    if (data.items && data.items.length > 0) {
+                        html += '<div style="overflow-x: auto;">';
+                        html += '<table><thead><tr>';
+                        html += '<th>순번</th><th>물건번호</th><th>기관명</th><th>물건명</th>';
+                        html += '<th>지역</th><th>도로명</th><th>건물번호</th>';
+                        html += '<th>최저입찰가</th><th>감정평가액</th><th>입찰종료</th>';
+                        html += '<th>상태</th><th>유찰</th><th>조회수</th>';
+                        html += '</tr></thead><tbody>';
+                        
+                        data.items.forEach((item, index) => {
+                            html += '<tr>';
+                            html += '<td>' + ((page - 1) * 100 + index + 1) + '</td>';
+                            html += '<td>' + (item.cltrNo || '-') + '</td>';
+                            html += '<td>' + (item.orgNm || '-') + '</td>';
+                            html += '<td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + (item.cltrNm || '-') + '</td>';
+                            html += '<td>' + (item.sido || '-') + '</td>';
+                            html += '<td>' + (item.rodNm || '-') + '</td>';
+                            html += '<td>' + (item.bldNo || '-') + '</td>';
+                            html += '<td style="text-align:right;">' + (item.minBidPrc ? item.minBidPrc.toLocaleString() + '원' : '-') + '</td>';
+                            html += '<td style="text-align:right;">' + (item.apslAsesAvgAmt ? item.apslAsesAvgAmt.toLocaleString() + '원' : '-') + '</td>';
+                            html += '<td>' + formatDate(item.pbctClsDtm) + '</td>';
+                            html += '<td>' + (item.pbctCltrStatNm || '-') + '</td>';
+                            html += '<td>' + (item.uscbCnt || 0) + '</td>';
+                            html += '<td>' + (item.iqryCnt || 0) + '</td>';
+                            html += '</tr>';
+                        });
+                        
+                        html += '</tbody></table></div>';
+                        
+                        // 페이지네이션
+                        const totalCount = data.totalCount || 0;
+                        const pageSize = 100;
+                        const totalPages = Math.ceil(totalCount / pageSize);
+                        
+                        html += '<div style="margin-top: 20px; text-align: center;">';
+                        html += '<div style="display: inline-block;">';
+                        
+                        // 이전 페이지
+                        if (page > 1) {
+                            html += '<button onclick="newItemsApiList(' + (page - 1) + ')" style="padding: 8px 15px; margin: 0 5px;">이전</button>';
+                        }
+                        
+                        // 페이지 번호
+                        const startPage = Math.max(1, page - 5);
+                        const endPage = Math.min(totalPages, page + 5);
+                        
+                        if (startPage > 1) {
+                            html += '<button onclick="newItemsApiList(1)" style="padding: 8px 15px; margin: 0 2px;">1</button>';
+                            if (startPage > 2) html += '<span style="margin: 0 5px;">...</span>';
+                        }
+                        
+                        for (let i = startPage; i <= endPage; i++) {
+                            if (i === page) {
+                                html += '<button onclick="newItemsApiList(' + i + ')" style="padding: 8px 15px; margin: 0 2px; background: #004098; color: white; font-weight: bold;">' + i + '</button>';
+                            } else {
+                                html += '<button onclick="newItemsApiList(' + i + ')" style="padding: 8px 15px; margin: 0 2px;">' + i + '</button>';
+                            }
+                        }
+                        
+                        if (endPage < totalPages) {
+                            if (endPage < totalPages - 1) html += '<span style="margin: 0 5px;">...</span>';
+                            html += '<button onclick="newItemsApiList(' + totalPages + ')" style="padding: 8px 15px; margin: 0 2px;">' + totalPages + '</button>';
+                        }
+                        
+                        // 다음 페이지
+                        if (page < totalPages) {
+                            html += '<button onclick="newItemsApiList(' + (page + 1) + ')" style="padding: 8px 15px; margin: 0 5px;">다음</button>';
+                        }
+                        
+                        html += '</div>';
+                        html += '<p style="margin-top: 10px; color: #666;">페이지 ' + page + ' / ' + totalPages + ' (총 ' + totalCount + '개)</p>';
+                        html += '</div>';
+                    } else {
+                        html += '<p>데이터 없음</p>';
+                    }
+                    
+                    document.getElementById('contentArea').innerHTML = html;
+                })
+                .catch(error => {
+                    document.getElementById('contentArea').innerHTML = 
+                        '<h2>신규 물건 API 목록 조회</h2><p style="color: red;">오류: ' + error.message + '</p>';
+                });
+        }
+        
+        // 신규 물건 DB 저장
+        function saveNewItemsToDb() {
+            let html = '<h2>신규 물건 DB 저장</h2>';
+            html += '<p><strong>전체 저장:</strong></p>';
+            html += '<button onclick="executeSaveNewItemsBatch()" style="padding:8px 15px; background:#e74c3c; color:white; font-weight:bold;">신규 물건 전체 저장</button>';
+            html += '<p style="color: #666; margin-top: 10px;">※ 신규 물건 전체 저장은 여러 페이지에서 데이터를 가져와 DB에 저장합니다.</p>';
+            html += '<div id="saveNewItemsResultArea" style="margin-top:20px;"></div>';
+            document.getElementById('contentArea').innerHTML = html;
+        }
+        
+        function executeSaveNewItemsBatch() {
+            if (!confirm('신규 물건 전체를 DB에 저장하시겠습니까?\n여러 페이지에서 데이터를 가져와 저장합니다.')) return;
+            
+            document.getElementById('saveNewItemsResultArea').innerHTML = '<p>신규 물건 전체 저장 중... (시간이 걸릴 수 있습니다)</p>';
+            
+            fetch(API_BASE + '/save-new-items-batch', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sido: '서울특별시'
+                })
+            })
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('saveNewItemsResultArea').innerHTML = 
+                        '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                })
+                .catch(error => {
+                    document.getElementById('saveNewItemsResultArea').innerHTML = 
+                        '<p style="color: red;">오류: ' + error.message + '</p>';
+                });
+        }
+        
+        // 5. DB 데이터 (원래 형태)
+        function dbDataRaw() {
+            showLoading();
+            
+            fetch(API_BASE + '/db/items-seoul?page=1&size=10')
+                .then(r => r.json())
+                .then(data => {
+                    let html = '<h2>DB 데이터 (원래 형태, 서울특별시만)</h2>';
+                    html += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                    document.getElementById('contentArea').innerHTML = html;
+                });
+        }
+        
+        // 6. DB 삭제
+        function dbDelete() {
+            let html = '<h2>DB 데이터 삭제</h2>';
+            html += '<p><strong>단건 삭제 (ID로):</strong></p>';
+            html += '<input type="number" id="deleteIdInput" placeholder="ID 입력" style="padding:8px; width:200px;"> ';
+            html += '<button onclick="executeDeleteById()" style="padding:8px 15px;">삭제</button>';
+            html += '<hr style="margin:20px 0;">';
+            html += '<p><strong>단건 삭제 (물건번호로):</strong></p>';
+            html += '<input type="text" id="deleteCltrNoInput" placeholder="물건번호 입력" style="padding:8px; width:200px;"> ';
+            html += '<button onclick="executeDeleteByCltrNo()" style="padding:8px 15px;">삭제</button>';
+            html += '<hr style="margin:20px 0;">';
+            html += '<p><strong>대량 삭제:</strong></p>';
+            html += '<button onclick="executeDeleteNonSeoul()" style="padding:8px 15px; margin-right:10px; background:#e67e22; color:white;">서울 외 지역 삭제</button>';
+            html += '<button onclick="executeDeleteAll()" style="padding:8px 15px; background:#c0392b; color:white; font-weight:bold;">⚠️ 전체 삭제</button>';
+            html += '<div id="deleteResultArea" style="margin-top:20px;"></div>';
+            document.getElementById('contentArea').innerHTML = html;
+        }
+        
+        function executeDeleteById() {
+            const id = document.getElementById('deleteIdInput').value;
+            if (!id) {
+                alert('ID를 입력하세요');
+                return;
+            }
+            
+            if (!confirm('ID ' + id + '를 삭제하시겠습니까?')) return;
+            
+            document.getElementById('deleteResultArea').innerHTML = '<p>삭제 중...</p>';
+            
+            fetch(API_BASE + '/db/item/' + id, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('deleteResultArea').innerHTML = 
+                        '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                });
+        }
+        
+        function executeDeleteByCltrNo() {
+            const cltrNo = document.getElementById('deleteCltrNoInput').value;
+            if (!cltrNo) {
+                alert('물건번호를 입력하세요');
+                return;
+            }
+            
+            if (!confirm('물건번호 ' + cltrNo + '를 삭제하시겠습니까?')) return;
+            
+            document.getElementById('deleteResultArea').innerHTML = '<p>삭제 중...</p>';
+            
+            fetch(API_BASE + '/db/item-by-cltr/' + cltrNo, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('deleteResultArea').innerHTML = 
+                        '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                });
+        }
+        
+        function executeDeleteNonSeoul() {
+            if (!confirm('서울특별시가 아닌 모든 데이터를 삭제하시겠습니까?')) return;
+            
+            document.getElementById('deleteResultArea').innerHTML = '<p>서울 외 지역 삭제 중...</p>';
+            
+            fetch(API_BASE + '/db/delete-non-seoul', { method: 'DELETE' })
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('deleteResultArea').innerHTML = 
+                        '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                });
+        }
+        
+        function executeDeleteAll() {
+            if (!confirm('⚠️⚠️⚠️ 경고 ⚠️⚠️⚠️\n\n모든 물건 데이터를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다!')) return;
+            if (!confirm('정말로 전체 삭제를 진행하시겠습니까? (최종 확인)')) return;
+            
+            const confirmText = prompt('전체 삭제를 진행하려면 "전체삭제" 를 입력하세요:');
+            if (confirmText !== '전체삭제') {
+                alert('취소되었습니다.');
+                return;
+            }
+            
+            document.getElementById('deleteResultArea').innerHTML = '<p style="color:red; font-weight:bold;">전체 데이터 삭제 중...</p>';
+            
+            fetch(API_BASE + '/db/delete-all', { method: 'DELETE' })
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('deleteResultArea').innerHTML = 
+                        '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                });
+        }
+        
+        // 7. 회원 목록
+        function memberList() {
+            showLoading();
+            
+            fetch(API_BASE + '/members/all')
+                .then(r => r.json())
+                .then(data => {
+                    let html = '<h2>회원 목록</h2>';
+                    html += '<p>총 ' + (data.length || 0) + '명</p>';
+                    
+                    if (data && data.length > 0) {
+                        html += '<table><thead><tr>';
+                        html += '<th>ID</th><th>이름</th><th>이메일</th><th>가입일</th><th>관리</th>';
+                        html += '</tr></thead><tbody>';
+                        
+                        data.forEach(member => {
+                            html += '<tr>';
+                            html += '<td>' + member.id + '</td>';
+                            html += '<td>' + member.name + '</td>';
+                            html += '<td>' + member.mail + '</td>';
+                            html += '<td>' + formatDate2(member.joinDate) + '</td>';
+                            html += '<td class="member-actions">';
+                            html += '<button onclick="editMember(\'' + member.id + '\')">수정</button>';
+                            html += '<button onclick="deleteMember(\'' + member.id + '\')">삭제</button>';
+                            html += '</td>';
+                            html += '</tr>';
+                        });
+                        
+                        html += '</tbody></table>';
+                    } else {
+                        html += '<p>회원이 없습니다.</p>';
+                    }
+                    
+                    document.getElementById('contentArea').innerHTML = html;
+                })
+                .catch(error => {
+                    document.getElementById('contentArea').innerHTML = 
+                        '<h2>회원 목록</h2><p>오류: ' + error.message + '</p>' +
+                        '<p>회원 API 엔드포인트가 없습니다. memberList() 메서드 추가 필요.</p>';
+                });
+        }
+        
+        function deleteMember(memberId) {
+            if (!confirm('회원 ' + memberId + '를 삭제하시겠습니까?')) return;
+            
+            fetch(API_BASE + '/members/' + memberId, {
+                method: 'DELETE'
+            })
+            .then(r => r.json())
+            .then(data => {
+                alert(data.message || '삭제 완료');
+                memberList();
+            })
+            .catch(err => {
+                alert('삭제 중 오류: ' + err.message);
+            });
+        }
+
+        function editMember(memberId) {
+            const newName = prompt('새 이름을 입력하세요 (비워두면 변경 안 함):');
+            const newEmail = prompt('새 이메일을 입력하세요 (비워두면 변경 안 함):');
+            const newPhone = prompt('새 전화번호를 입력하세요 (비워두면 변경 안 함):');
+
+            const payload = { memberId: memberId };
+            if (newName && newName.trim() !== '') payload.name = newName.trim();
+            if (newEmail && newEmail.trim() !== '') payload.mail = newEmail.trim();
+            if (newPhone && newPhone.trim() !== '') payload.phone = newPhone.trim();
+
+            if (Object.keys(payload).length === 1) {
+                alert('변경할 내용이 없습니다.');
+                return;
+            }
+
+            fetch(API_BASE + '/members/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(r => r.json())
+            .then(data => {
+                alert(data.message || '수정 완료');
+                memberList();
+            })
+            .catch(err => {
+                alert('수정 중 오류: ' + err.message);
+            });
+        }
+        
+        // 8. 게시글 목록
+        function boardList() {
+            showLoading();
+            
+            fetch(API_BASE + '/boards/all')
+                .then(r => r.json())
+                .then(data => {
+                    let html = '<h2>게시글 목록</h2>';
+                    html += '<p>총 ' + (data.length || 0) + '개</p>';
+                    
+                    if (data && data.length > 0) {
+                        html += '<table><thead><tr>';
+                        html += '<th>번호</th><th>제목</th><th>작성자</th><th>작성일</th><th>관리</th>';
+                        html += '</tr></thead><tbody>';
+                        
+                        data.forEach(board => {
+                            html += '<tr>';
+                            html += '<td>' + board.no + '</td>';
+                            html += '<td>' + board.title + '</td>';
+                            html += '<td>' + board.id + '</td>';
+                            html += '<td>' + formatDate2(board.regDate) + '</td>';
+                            html += '<td>';
+                            html += '<button onclick="deleteBoard(' + board.no + ')">삭제</button>';
+                            html += '</td>';
+                            html += '</tr>';
+                        });
+                        
+                        html += '</tbody></table>';
+                    } else {
+                        html += '<p>게시글이 없습니다.</p>';
+                    }
+                    
+                    document.getElementById('contentArea').innerHTML = html;
+                })
+                .catch(error => {
+                    document.getElementById('contentArea').innerHTML = 
+                        '<h2>게시글 목록</h2><p>오류: ' + error.message + '</p>' +
+                        '<p>게시판 API 엔드포인트가 없습니다. boardList() 메서드 추가 필요.</p>';
+                });
+        }
+
+        function deleteBoard(boardNo) {
+            if (!confirm('게시글 번호 ' + boardNo + '를 삭제하시겠습니까?')) return;
+
+            fetch(API_BASE + '/boards/' + boardNo, {
+                method: 'DELETE'
+            })
+            .then(r => r.json())
+            .then(data => {
+                alert(data.message || '삭제 완료');
+                boardList();
+            })
+            .catch(err => {
+                alert('삭제 중 오류: ' + err.message);
+            });
+        }
+        
+        // 유틸리티
+        function showLoading() {
+            document.getElementById('contentArea').innerHTML = 
+                '<div class="loading">로딩 중...</div>';
+        }
+        
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            try {
+                const year = dateStr.substring(0, 4);
+                const month = dateStr.substring(4, 6);
+                const day = dateStr.substring(6, 8);
+                const hour = dateStr.substring(8, 10);
+                const minute = dateStr.substring(10, 12);
+                return year + '-' + month + '-' + day + ' ' + hour + ':' + minute;
+            } catch (e) {
+                return dateStr;
+            }
+        }
+        
+        function formatDate2(dateStr) {
+            if (!dateStr) return '-';
+            return new Date(dateStr).toLocaleString('ko-KR');
+        }
+    </script>
+
+<!-- =================== 푸터 =================== -->
+<div th:replace="~{layout/footer :: footer}"></div>
+
+</body>
+</html>

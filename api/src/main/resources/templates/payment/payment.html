@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${pageType == 'checkout' ? '결제하기' : (pageType == 'success' ? '결제 완료' : (pageType == 'fail' ? '결제 실패' : '내 구매내역'))} + ' - AuctionHub'">결제 - AuctionHub</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/auction.css}">
+    <link rel="stylesheet" th:href="@{/css/kamco.css}">
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- 아임포트 (결제 페이지에서만 필요) -->
+    <script th:if="${pageType == 'checkout'}" src="https://cdn.iamport.kr/v1/iamport.js"></script>
+    
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            font-family: 'Nanum Gothic', 'Malgun Gothic', sans-serif;
+            background: #f8f9fa;
+        }
+        .payment-container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 30px;
+        }
+        .result-container {
+            max-width: 600px;
+            margin: 80px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .payment-card {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .card-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #007bff;
+        }
+        .result-icon { font-size: 80px; margin-bottom: 20px; }
+        .result-title { font-size: 32px; font-weight: bold; margin-bottom: 15px; }
+        .success-title { color: #28a745; }
+        .fail-title { color: #dc3545; }
+        .result-message { font-size: 18px; color: #666; margin-bottom: 30px; }
+        .fail-message { 
+            padding: 20px; 
+            background: #f8d7da; 
+            border: 1px solid #f5c6cb; 
+            border-radius: 8px; 
+            color: #721c24; 
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { color: #666; font-weight: 500; }
+        .info-value { color: #333; font-weight: bold; }
+        .amount { font-size: 24px; color: #007bff; font-weight: bold; }
+        .btn { 
+            padding: 15px; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            transition: all 0.3s; 
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-secondary { background: white; color: #007bff; border: 2px solid #007bff; }
+        .btn-gray { background: #6c757d; color: white; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div th:replace="~{layout/header :: header}"></div>
+
+    <!-- 결제하기 페이지 -->
+    <div th:if="${pageType == 'checkout'}" class="payment-container">
+        <div style="text-align: center; margin-bottom: 40px;">
+            <h1 style="font-size: 32px; font-weight: 700;">결제하기</h1>
+        </div>
+        
+        <!-- 에러 메시지 -->
+        <div th:if="${error != null}" style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+            <strong th:text="${error}">에러 메시지</strong>
+            <div th:if="${existingPaymentId != null}" style="margin-top: 10px;">
+                <a th:href="@{/payment/detail/{id}(id=${existingPaymentId})}" 
+                   style="color: #721c24; text-decoration: underline;">
+                    기존 입찰서 보기
+                </a>
+            </div>
+        </div>
+        
+        <!-- 상품 정보 -->
+        <div class="payment-card">
+            <h3 class="card-title">상품 정보</h3>
+            <div style="display: flex; gap: 20px;">
+                <img th:src="@{/upload/{img}(img=${auction.img})}" th:alt="${auction.name}"
+                     style="width: 200px; height: 150px; object-fit: cover; border-radius: 8px;"
+                     onerror="this.src='/img/auto-3298890_1280.jpg'">
+                <div style="flex: 1;">
+                    <h4 style="font-size: 24px; font-weight: bold; margin-bottom: 10px;" th:text="${auction.name}">상품명</h4>
+                    <p style="color: #666;">판매자: <span th:text="${auction.id}">판매자</span></p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 가격 정보 -->
+        <div class="payment-card">
+            <h3 class="card-title">결제 금액</h3>
+            <div class="info-row" th:if="${bidAmount != null}">
+                <span class="info-label">입찰금액</span>
+                <span class="amount" th:text="${#numbers.formatInteger(bidAmount, 3, 'COMMA')} + '원'">입찰금액</span>
+            </div>
+            <div class="info-row" th:if="${depositAmount != null}">
+                <span class="info-label">보증금액</span>
+                <span class="amount" th:text="${#numbers.formatInteger(depositAmount, 3, 'COMMA')} + '원'">보증금액</span>
+            </div>
+            <div class="info-row" th:if="${bidAmount == null and depositAmount == null}">
+                <span class="info-label">낙찰가</span>
+                <span class="amount">[[${#numbers.formatInteger(auction.endPrice > 0 ? auction.endPrice : auction.startPrice, 3, 'COMMA')}]]원</span>
+            </div>
+        </div>
+        
+        <!-- 결제 데이터 (hidden) -->
+        <div id="paymentData" style="display: none;"
+             th:if="${pageType == 'checkout'}"
+             th:with="auctionNo=${auction != null ? auction.no : null},
+                      itemIdValue=${itemId != null ? itemId : null},
+                      cltrNoValue=${cltrNo != null ? cltrNo : (auction != null ? auction.cltrNo : null)},
+                      amountValue=${auction != null ? (auction.endPrice != null and auction.endPrice > 0 ? auction.endPrice : auction.startPrice) : 0},
+                      itemNameValue=${auction != null ? auction.name : ''},
+                      buyerNameValue=${buyerName ?: ''},
+                      buyerEmailValue=${buyerEmail ?: ''},
+                      buyerPhoneValue=${buyerPhone ?: ''}"
+             th:data-auction-no="${auctionNo}"
+             th:data-item-id="${itemIdValue}"
+             th:data-cltr-no="${cltrNoValue}"
+             th:data-amount="${amountValue}"
+             th:data-item-name="${itemNameValue}"
+             th:data-buyer-name="${buyerNameValue}"
+             th:data-buyer-email="${buyerEmailValue}"
+             th:data-buyer-phone="${buyerPhoneValue}">
+        </div>
+        
+        <!-- 결제 버튼 -->
+        <button id="paymentBtn" class="btn btn-primary w-100" 
+                style="padding: 20px; font-size: 18px;">
+            결제하기
+        </button>
+        
+        <script th:inline="javascript">
+            $(document).ready(function() {
+                if (typeof window.IMP === 'undefined') {
+                    console.error('아임포트 스크립트가 로드되지 않았습니다.');
+                    alert('결제 시스템을 초기화할 수 없습니다. 페이지를 새로고침해주세요.');
+                    return;
+                }
+                
+                const IMP = window.IMP;
+                const impCode = /*[[${iamportImpCode != null ? iamportImpCode : 'imp00000000'}]]*/ 'imp00000000';
+                console.log('아임포트 초기화:', impCode);
+                IMP.init(impCode);
+                
+                $('#paymentBtn').click(function() {
+                    // 데이터 속성에서 값 가져오기
+                    const $data = $('#paymentData');
+                    const auctionNo = $data.data('auction-no') ? parseInt($data.data('auction-no')) : null;
+                    const itemId = $data.data('item-id') ? parseInt($data.data('item-id')) : null;
+                    const cltrNo = $data.data('cltr-no') || null;
+                    
+                    // 입찰서에서 전달된 보증금액이 있으면 사용, 없으면 기본 금액 사용
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const depositAmount = urlParams.get('depositAmount');
+                    const bidAmount = urlParams.get('bidAmount');
+                    const amount = depositAmount ? parseInt(depositAmount) : (parseInt($data.data('amount')) || 0);
+                    
+                    const itemName = $data.data('item-name') || '';
+                    const buyerName = $data.data('buyer-name') || '';
+                    const buyerEmail = $data.data('buyer-email') || '';
+                    const buyerPhone = $data.data('buyer-phone') || '';
+                    
+                    // 결제 준비
+                    const requestData = {
+                        amount: amount,
+                        itemName: itemName
+                    };
+                    if (auctionNo) requestData.auctionNo = auctionNo;
+                    if (itemId) requestData.itemId = itemId;
+                    if (cltrNo) requestData.cltrNo = cltrNo;
+                    
+                    $.ajax({
+                        url: '/payment/prepare',
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(requestData),
+                        success: function(response) {
+                            if (response.success) {
+                                requestPay(response.merchantUid, amount, itemName, buyerName, buyerEmail, buyerPhone);
+                            } else {
+                                alert(response.message);
+                            }
+                        },
+                        error: function() {
+                            alert('결제 준비 중 오류가 발생했습니다.');
+                        }
+                    });
+                });
+                
+                function requestPay(merchantUid, amount, itemName, buyerName, buyerEmail, buyerPhone) {
+                    // 입찰서 정보 가져오기
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const bidAmount = urlParams.get('bidAmount');
+                    const depositAmount = urlParams.get('depositAmount');
+                    const bidMethod = urlParams.get('bidMethod') || 'self';
+                    const selectedBank = urlParams.get('selectedBank') || '';
+                    
+                    IMP.request_pay({
+                        pg: 'html5_inicis',
+                        pay_method: 'card',
+                        merchant_uid: merchantUid,
+                        name: itemName,
+                        amount: amount,
+                        buyer_name: buyerName,
+                        buyer_email: buyerEmail,
+                        buyer_tel: buyerPhone
+                    }, function(rsp) {
+                        if (rsp.success) {
+                            $.ajax({
+                                url: '/payment/complete',
+                                method: 'POST',
+                                contentType: 'application/json',
+                                data: JSON.stringify({
+                                    imp_uid: rsp.imp_uid,
+                                    merchant_uid: rsp.merchant_uid
+                                }),
+                                success: function(result) {
+                                    if (result.success) {
+                                        // 입찰서 정보와 함께 success 페이지로 이동
+                                        let successUrl = '/payment/success?merchantUid=' + merchantUid;
+                                        if (bidAmount) successUrl += '&bidAmount=' + bidAmount;
+                                        if (depositAmount) successUrl += '&depositAmount=' + depositAmount;
+                                        if (bidMethod) successUrl += '&bidMethod=' + encodeURIComponent(bidMethod);
+                                        if (selectedBank) successUrl += '&selectedBank=' + encodeURIComponent(selectedBank);
+                                        location.href = successUrl;
+                                    } else {
+                                        alert('결제 검증에 실패했습니다: ' + result.message);
+                                        location.href = '/payment/fail?message=' + encodeURIComponent(result.message);
+                                    }
+                                }
+                            });
+                        } else {
+                            alert('결제에 실패했습니다: ' + rsp.error_msg);
+                            location.href = '/payment/fail?message=' + encodeURIComponent(rsp.error_msg);
+                        }
+                    });
+                }
+            });
+        </script>
+    </div>
+
+    <!-- 결제 성공 페이지 -->
+    <div th:if="${pageType == 'success'}" class="result-container">
+        <div class="result-icon">✅</div>
+        <h1 class="result-title success-title">결제가 완료되었습니다!</h1>
+        <p class="result-message">주문이 정상적으로 처리되었습니다.</p>
+        
+        <div class="payment-card" style="text-align: left; margin-bottom: 30px;">
+            <div class="info-row">
+                <span class="info-label">주문번호</span>
+                <span class="info-value" th:text="${payment.merchantUid}">주문번호</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">상품명</span>
+                <span class="info-value" th:text="${auction.name}">상품명</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">결제금액</span>
+                <span class="amount" th:text="${#numbers.formatInteger(payment.paidAmount, 3, 'COMMA')} + '원'">금액</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">결제일시</span>
+                <span class="info-value" th:text="${#temporals.format(payment.paidAt, 'yyyy-MM-dd HH:mm')}">날짜</span>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 15px;">
+            <button class="btn btn-secondary" style="flex: 1;" onclick="location.href='/main'">메인으로</button>
+            <button class="btn btn-primary" style="flex: 1;" onclick="location.href='/payment/my-payments'">구매내역 보기</button>
+        </div>
+    </div>
+
+    <!-- 결제 실패 페이지 -->
+    <div th:if="${pageType == 'fail'}" class="result-container">
+        <div class="result-icon">❌</div>
+        <h1 class="result-title fail-title">결제에 실패했습니다</h1>
+        
+        <div class="fail-message" th:text="${message != null ? message : '결제 처리 중 오류가 발생했습니다.'}">
+            오류 메시지
+        </div>
+        
+        <div style="display: flex; gap: 15px;">
+            <button class="btn btn-gray" style="flex: 1;" onclick="location.href='/main'">메인으로</button>
+            <button class="btn btn-primary" style="flex: 1;" onclick="history.back()">다시 시도</button>
+        </div>
+    </div>
+
+    <!-- 내 구매내역 페이지 -->
+    <div th:if="${pageType == 'list'}" style="max-width: 1200px; margin: 50px auto; padding: 20px;">
+        <h1 style="font-size: 28px; font-weight: bold; margin-bottom: 30px;">내 구매내역</h1>
+        
+        <div th:if="${payments != null and !payments.isEmpty()}">
+            <div th:each="payment : ${payments}" class="payment-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0;">
+                    <span style="color: #666; font-size: 14px;">
+                        [[${#temporals.format(payment.paidAt, 'yyyy-MM-dd HH:mm')}]]
+                    </span>
+                    <span th:class="${payment.status == 'paid' ? 'badge badge-success' : (payment.status == 'cancelled' ? 'badge badge-danger' : 'badge badge-warning')}"
+                          th:text="${payment.status == 'paid' ? '결제완료' : (payment.status == 'cancelled' ? '결제취소' : '대기중')}">
+                        상태
+                    </span>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+                    <div>
+                        <h4 style="font-size: 20px; font-weight: bold; margin-bottom: 10px;" th:text="${payment.itemName}">상품명</h4>
+                        <p style="color: #666; margin-bottom: 5px;">주문번호: <span th:text="${payment.merchantUid}">주문번호</span></p>
+                        <p style="color: #666;">
+                            결제수단: 
+                            <th:block th:switch="${payment.paymentMethod}">
+                                <span th:case="'card'">신용카드</span>
+                                <span th:case="'trans'">계좌이체</span>
+                                <span th:case="'vbank'">가상계좌</span>
+                                <span th:case="*">기타</span>
+                            </th:block>
+                        </p>
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="amount" style="margin-bottom: 15px;">
+                            [[${#numbers.formatInteger(payment.paidAmount, 3, 'COMMA')}]]원
+                        </div>
+                        <button th:if="${payment.receiptUrl != null}" 
+                                th:data-url="${payment.receiptUrl}"
+                                onclick="window.open(this.dataset.url, '_blank')"
+                                style="padding: 8px 20px; background: white; color: #007bff; border: 1px solid #007bff; border-radius: 5px; cursor: pointer;">
+                            영수증 보기
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div th:if="${payments == null or payments.isEmpty()}" 
+             style="text-align: center; padding: 80px 20px; color: #999;">
+            <p style="font-size: 18px;">구매내역이 없습니다</p>
+            <a th:href="@{/main}" style="display: inline-block; margin-top: 20px; padding: 12px 30px; background: #007bff; color: white; text-decoration: none; border-radius: 6px;">
+                경매 둘러보기
+            </a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div th:replace="~{layout/footer :: footer}"></div>
+</body>
+</html>
+

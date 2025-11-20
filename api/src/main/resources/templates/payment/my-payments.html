@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>입찰내역관리 - 나의경매</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Court Auction CSS -->
+    <link rel="stylesheet" th:href="@{/css/auction.css}">
+    <link rel="stylesheet" th:href="@{/css/kamco.css}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <style>
+        :root {
+            --court-blue: #004098;
+            --court-navy: #002855;
+            --border-gray: #ddd;
+            --bg-light: #f5f5f5;
+            --text-dark: #333;
+            --text-gray: #777;
+        }
+
+        /* ========== 메인 레이아웃 ========== */
+        .board-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            display: flex;
+            gap: 30px;
+        }
+
+        .side-menu {
+            width: 250px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 0;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .side-menu-header {
+            background: var(--court-blue);
+            color: #fff;
+            padding: 15px 20px;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .side-menu-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .side-menu-item {
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .side-menu-item a {
+            display: block;
+            padding: 14px 20px;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .side-menu-item a:hover {
+            background: #f8f9fa;
+            color: var(--court-blue);
+            padding-left: 25px;
+        }
+
+        .side-menu-item.active a {
+            background: var(--court-blue);
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .main-content {
+            flex: 1;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            min-width: 0;
+        }
+
+        .breadcrumb {
+            padding: 15px 25px;
+            border-bottom: 1px solid var(--border-gray);
+            font-size: 13px;
+            color: var(--text-gray);
+        }
+
+        .breadcrumb a {
+            color: var(--text-gray);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            color: var(--court-blue);
+        }
+
+        .search-summary {
+            padding: 20px 25px;
+            background: #f8f9fa;
+            border-bottom: 1px solid var(--border-gray);
+        }
+
+        .search-summary-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+
+        .search-summary-text {
+            font-size: 14px;
+            color: var(--text-gray);
+        }
+
+        .search-summary-text strong {
+            color: var(--court-blue);
+            font-weight: 700;
+        }
+
+        .note {
+            padding: 12px 25px;
+            background: #fffbf0;
+            border-bottom: 1px solid #ffe082;
+            font-size: 13px;
+            color: #795548;
+        }
+
+        /* ========== 입찰내역 테이블 ========== */
+        .table-container {
+            padding: 25px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow-x: auto !important;
+        }
+
+        .auction-table {
+            width: 100% !important;
+            max-width: none !important;
+            min-width: 100% !important;
+            border-collapse: collapse !important;
+            font-size: 13px !important;
+            table-layout: fixed !important;
+        }
+
+        .auction-table th,
+        .auction-table td {
+            border-radius: 0 !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        .auction-table thead {
+            background: #f8f9fa;
+            border-top: 2px solid var(--court-blue);
+            border-bottom: 1px solid var(--border-gray);
+        }
+
+        .auction-table th {
+            padding: 12px 10px;
+            text-align: center;
+            font-weight: 700;
+            color: var(--text-dark);
+            font-size: 14px;
+        }
+
+        .auction-table tbody tr {
+            height: auto;
+            min-height: 60px;
+        }
+
+        .auction-table tbody td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+        }
+
+        .auction-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .item-number {
+            text-align: center;
+            color: var(--text-gray);
+            font-weight: 600;
+        }
+
+        .location-details {
+            text-align: left;
+        }
+
+        .usage-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: var(--court-blue);
+            color: #fff;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-right: 5px;
+        }
+
+        .case-number {
+            font-size: 11px;
+            color: var(--text-gray);
+        }
+
+        .address {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin: 5px 0;
+        }
+
+        .building-info {
+            font-size: 12px;
+            color: var(--text-gray);
+            margin-top: 3px;
+        }
+
+        .remarks {
+            text-align: left;
+            font-size: 12px;
+            color: var(--text-gray);
+        }
+
+        .price-info {
+            text-align: right;
+        }
+
+        .price-label {
+            font-size: 11px;
+            color: var(--text-gray);
+            margin-bottom: 3px;
+        }
+
+        .price-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .price-value.min-price {
+            color: var(--court-blue);
+        }
+
+        .price-percent {
+            font-size: 12px;
+            color: var(--text-gray);
+            margin-left: 5px;
+            font-weight: 500;
+        }
+
+        .dept-info {
+            text-align: center;
+        }
+
+        .dept-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .auction-date {
+            font-size: 13px;
+            color: var(--court-blue);
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .status-badge-table {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #fff3cd;
+            color: #856404;
+            border-radius: 0;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge-table.new {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge-table.failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-badge-table.paid {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge-table.unpaid {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .bid-submit-date {
+            font-size: 12px;
+            color: var(--text-gray);
+            margin-bottom: 5px;
+        }
+
+        .bid-deadline {
+            font-size: 12px;
+            color: var(--court-blue);
+            font-weight: 600;
+        }
+
+        .payment-action {
+            text-align: center;
+        }
+
+        .btn-payment {
+            padding: 8px 16px;
+            background: rgb(21, 165, 87);
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-payment:hover {
+            background: #c82333;
+        }
+
+        .btn-payment:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-delete:hover {
+            background: #c82333;
+        }
+
+        .btn-delete:active {
+            background: #bd2130;
+        }
+
+        .no-payments {
+            text-align: center;
+            padding: 80px 20px;
+            background: #fff;
+        }
+
+        .no-payments-icon {
+            font-size: 72px;
+            margin-bottom: 20px;
+            color: #ddd;
+        }
+
+        .no-payments h3 {
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .no-payments p {
+            color: #999;
+            margin-bottom: 30px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-gray);
+        }
+
+        @media (max-width: 768px) {
+            .board-container {
+                flex-direction: column;
+            }
+            .side-menu {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- =================== 헤더 =================== -->
+<div th:replace="~{layout/header :: header}"></div>
+
+<!-- 메인 컨텐츠 -->
+<main class="board-container">
+    <!-- 좌측 네비 -->
+    <aside class="side-menu">
+        <div class="side-menu-header">• 나의경매</div>
+        <ul class="side-menu-list">
+            <li class="side-menu-item">
+                <a th:href="@{/myFavorites}">
+                    <i class="fas fa-star"></i> 즐겨찾기
+                </a>
+            </li>
+            <li class="side-menu-item active">
+                <a th:href="@{/payment/my-payments}">
+                    <i class="fas fa-gavel"></i> 입찰내역관리
+                </a>
+            </li>
+            <li class="side-menu-item">
+                <a th:href="@{/price-alerts}">
+                    <i class="fas fa-bell"></i> 가격 알림
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- 오른쪽 메인 -->
+    <section class="main-content">
+        <!-- 브레드크럼 -->
+        <div class="breadcrumb">
+            <a th:href="@{/main}">▲ HOME</a> &gt;
+            <a th:href="@{/payment/my-payments}">나의경매</a> &gt;
+            <span>입찰내역관리</span>
+        </div>
+
+        <!-- 검색 요약 -->
+        <div class="search-summary">
+            <div class="search-summary-title">입찰내역관리</div>
+            <div class="search-summary-text">
+                총 입찰내역 <strong id="paymentsCount" th:text="${payments != null ? payments.size() : 0} + '건'">0건</strong>
+            </div>
+        </div>
+
+        <!-- 안내 문구 -->
+        <div class="note">
+            • 소재지 및 내역을 클릭하면 물건상세 페이지로 이동합니다.
+        </div>
+
+        <!-- 입찰내역 목록 (테이블) -->
+        <div class="table-container">
+            <div id="paymentsContainer">
+                <div class="loading" th:if="${payments == null}">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 32px; color: var(--court-blue); margin-bottom: 15px;"></i>
+                    <p style="color: var(--text-gray);">입찰내역을 불러오는 중...</p>
+                </div>
+                <div th:if="${payments != null and payments.isEmpty()}" class="no-payments">
+                    <div class="no-payments-icon">📋</div>
+                    <h3>입찰내역이 없습니다</h3>
+                    <p>아직 입찰서를 작성한 물건이 없습니다.</p>
+                    <a th:href="@{/auctionList}" style="padding: 12px 24px; background: var(--court-blue); color: #fff; text-decoration: none; border-radius: 0; font-size: 16px; font-weight: 700; display: inline-block;">경매 둘러보기</a>
+                </div>
+                <table class="auction-table" th:if="${payments != null and !payments.isEmpty()}">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%;">물건<br>번호</th>
+                            <th style="width: 35%;">소재지 및 내역</th>
+                            <th style="width: 10%;">비고</th>
+                            <th style="width: 15%;">감정평가액<br>최저매각가격</th>
+                            <th style="width: 10%;">입찰정보</th>
+                            <th style="width: 10%;">보증금<br>상태</th>
+                            <th style="width: 8%;">결제</th>
+                            <th style="width: 7%;">삭제</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="payment, stat : ${payments}" 
+                            th:attr="onclick='goToBidDetail(' + ${payment.id} + ')'" 
+                            style="cursor: pointer;">
+                            <td class="item-number" th:text="${payments.size() - stat.index}">1</td>
+                            <td>
+                                <div class="location-details">
+                                    <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 5px;">
+                                        <span class="usage-badge">온비드</span>
+                                        <span class="case-number" th:text="'물건번호: ' + (${payment.cltrNo != null and payment.cltrNo != '' ? payment.cltrNo : '-'})">물건번호: -</span>
+                                    </div>
+                                    <div class="address" th:text="${payment.itemName != null and payment.itemName != '' ? payment.itemName : '물건 정보 없음'}">주소</div>
+                                </div>
+                            </td>
+                            <td class="remarks">
+                                <div>• 공공경매</div>
+                            </td>
+                            <td class="price-info">
+                                <div class="price-label">입찰금액</div>
+                                <div class="price-value min-price" th:text="${payment.amount != null ? (#numbers.formatInteger(payment.amount, 3, 'COMMA') + '원') : '-'}">-</div>
+                            </td>
+                            <td class="dept-info">
+                                <div class="bid-submit-date" th:text="'입찰서제출일: ' + ${payment.formattedCreatedDate != null ? payment.formattedCreatedDate : '-'}">입찰서제출일: -</div>
+                                <div class="bid-deadline" th:text="'입찰마감일시: ' + ${payment.formattedDeadlineDate != null ? payment.formattedDeadlineDate : '-'}">입찰마감일시: -</div>
+                            </td>
+                            <td class="dept-info">
+                                <span th:class="${payment.status == 'paid' ? 'status-badge-table paid' : 'status-badge-table unpaid'}"
+                                      th:text="${payment.status == 'paid' ? '완납' : '미납'}">미납</span>
+                            </td>
+                            <td class="payment-action" onclick="event.stopPropagation();">
+                                <!-- 미납일 경우에만 결제 버튼 표시 -->
+                                <button th:if="${payment.status != 'paid'}" 
+                                        class="btn-payment"
+                                        th:attr="data-payment-id=${payment.id},
+                                                 data-auction-no=${payment.auctionNo != null ? payment.auctionNo : ''},
+                                                 data-item-id=${payment.itemId != null ? payment.itemId : ''},
+                                                 data-cltr-no=${payment.cltrNo != null ? payment.cltrNo : ''}"
+                                        onclick="handlePaymentClick(event, this)">
+                                    결제
+                                </button>
+                                <!-- 완납일 경우 완료 표시 -->
+                                <span th:if="${payment.status == 'paid'}" 
+                                      style="color: #28a745; font-weight: 600; font-size: 13px;">
+                                    결제완료
+                                </span>
+                            </td>
+                            <td style="text-align: center;" onclick="event.stopPropagation();">
+                                <button class="btn-delete" 
+                                        th:attr="onclick='event.stopPropagation(); deletePayment(' + ${payment.id} + ')'"
+                                        title="입찰내역 삭제">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- =================== 푸터 =================== -->
+<div th:replace="~{layout/footer :: footer}"></div>
+
+<script>
+    function goToBidDetail(paymentId) {
+        if (paymentId) {
+            window.location.href = '/payment/detail/' + paymentId;
+        }
+    }
+    
+    /**
+     * 결제 버튼 클릭 핸들러
+     * 이벤트 전파를 막고 결제 페이지로 이동
+     */
+    function handlePaymentClick(event, button) {
+        // 이벤트 전파 중지 (행 클릭 이벤트 방지)
+        if (event) {
+            event.stopPropagation();
+            event.preventDefault();
+        }
+        
+        console.log('결제 버튼 클릭됨');
+        
+        // 버튼의 data 속성에서 값 가져오기
+        const paymentId = button.getAttribute('data-payment-id');
+        const auctionNo = button.getAttribute('data-auction-no');
+        const itemId = button.getAttribute('data-item-id');
+        const cltrNo = button.getAttribute('data-cltr-no');
+        
+        console.log('결제 정보:', {
+            paymentId: paymentId,
+            auctionNo: auctionNo,
+            itemId: itemId,
+            cltrNo: cltrNo
+        });
+        
+        // 결제 페이지 URL 구성
+        let paymentUrl = '/payment/checkout?';
+        let hasParam = false;
+        
+        if (auctionNo && auctionNo !== '' && auctionNo !== 'null') {
+            paymentUrl += 'auctionNo=' + auctionNo;
+            hasParam = true;
+        } else if (itemId && itemId !== '' && itemId !== 'null') {
+            paymentUrl += 'itemId=' + itemId;
+            hasParam = true;
+        } else if (cltrNo && cltrNo !== '' && cltrNo !== 'null') {
+            paymentUrl += 'cltrNo=' + encodeURIComponent(cltrNo);
+            hasParam = true;
+        }
+        
+        if (!hasParam) {
+            alert('물건 정보를 찾을 수 없습니다. 관리자에게 문의해주세요.');
+            console.error('물건 식별자 없음:', { auctionNo, itemId, cltrNo });
+            return;
+        }
+        
+        console.log('결제 페이지로 이동:', paymentUrl);
+        window.location.href = paymentUrl;
+    }
+    
+    /**
+     * 입찰내역 삭제
+     */
+    function deletePayment(paymentId) {
+        console.log('=== 삭제 함수 호출 ===');
+        console.log('paymentId:', paymentId, '타입:', typeof paymentId);
+        
+        if (!paymentId) {
+            alert('입찰내역 ID가 없습니다.');
+            console.error('paymentId가 없습니다!');
+            return;
+        }
+        
+        if (!confirm('입찰내역을 삭제하시겠습니까?\n삭제된 내역은 복구할 수 없습니다.')) {
+            return;
+        }
+        
+        const deleteUrl = '/payment/delete/' + paymentId;
+        console.log('삭제 URL:', deleteUrl);
+        
+        // 먼저 POST로 시도 (더 안정적)
+        $.ajax({
+            url: deleteUrl,
+            method: 'POST',
+            dataType: 'json',
+            beforeSend: function() {
+                console.log('POST 삭제 요청 전송 중...');
+            },
+            success: function(response) {
+                console.log('삭제 응답 받음:', response);
+                if (response && response.success) {
+                    alert('입찰내역이 삭제되었습니다.');
+                    // 페이지 새로고침
+                    location.reload();
+                } else {
+                    const errorMsg = response ? (response.message || '알 수 없는 오류') : '응답이 없습니다.';
+                    alert('삭제 중 오류가 발생했습니다: ' + errorMsg);
+                    console.error('삭제 실패:', response);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('POST 삭제 오류:', { 
+                    status: status, 
+                    error: error, 
+                    statusCode: xhr.status,
+                    responseText: xhr.responseText,
+                    url: deleteUrl
+                });
+                
+                // POST가 실패하면 DELETE로 재시도
+                if (xhr.status === 404 || xhr.status === 405) {
+                    console.log('DELETE 메서드로 재시도...');
+                    $.ajax({
+                        url: deleteUrl,
+                        method: 'DELETE',
+                        dataType: 'json',
+                        success: function(response) {
+                            console.log('DELETE 삭제 응답 받음:', response);
+                            if (response && response.success) {
+                                alert('입찰내역이 삭제되었습니다.');
+                                location.reload();
+                            } else {
+                                const errorMsg = response ? (response.message || '알 수 없는 오류') : '응답이 없습니다.';
+                                alert('삭제 중 오류가 발생했습니다: ' + errorMsg);
+                            }
+                        },
+                        error: function(xhr2, status2, error2) {
+                            console.error('DELETE도 실패:', { 
+                                status: status2, 
+                                error: error2, 
+                                statusCode: xhr2.status,
+                                responseText: xhr2.responseText 
+                            });
+                            let errorMsg = '삭제 중 오류가 발생했습니다.';
+                            
+                            if (xhr2.status === 401 || xhr2.status === 403) {
+                                errorMsg = '로그인이 필요합니다.';
+                            } else if (xhr2.status === 404) {
+                                errorMsg = '입찰내역을 찾을 수 없습니다. (경로: ' + deleteUrl + ')';
+                            } else if (xhr2.status === 500) {
+                                errorMsg = '서버 오류가 발생했습니다.';
+                            }
+                            
+                            alert(errorMsg + '\n상태 코드: ' + xhr2.status);
+                        }
+                    });
+                    return;
+                }
+                
+                let errorMsg = '삭제 중 오류가 발생했습니다.';
+                
+                if (xhr.status === 401 || xhr.status === 403) {
+                    errorMsg = '로그인이 필요합니다.';
+                } else if (xhr.status === 404) {
+                    errorMsg = '입찰내역을 찾을 수 없습니다. (경로: ' + deleteUrl + ')';
+                } else if (xhr.status === 500) {
+                    errorMsg = '서버 오류가 발생했습니다.';
+                }
+                
+                alert(errorMsg + '\n상태 코드: ' + xhr.status);
+            }
+        });
+    }
+    
+    /**
+     * 기존 함수 (하위 호환성 유지)
+     */
+    function goToPayment(paymentId, auctionNo, itemId, cltrNo) {
+        console.log('goToPayment 호출:', { paymentId, auctionNo, itemId, cltrNo });
+        
+        let paymentUrl = '/payment/checkout?';
+        let hasParam = false;
+        
+        if (auctionNo && auctionNo !== null && auctionNo !== 'null' && auctionNo !== '') {
+            paymentUrl += 'auctionNo=' + auctionNo;
+            hasParam = true;
+        } else if (itemId && itemId !== null && itemId !== 'null' && itemId !== '') {
+            paymentUrl += 'itemId=' + itemId;
+            hasParam = true;
+        } else if (cltrNo && cltrNo !== null && cltrNo !== 'null' && cltrNo !== '') {
+            paymentUrl += 'cltrNo=' + encodeURIComponent(cltrNo);
+            hasParam = true;
+        }
+        
+        if (!hasParam) {
+            alert('물건 정보를 찾을 수 없습니다.');
+            return;
+        }
+        
+        window.location.href = paymentUrl;
+    }
+</script>
+
+</body>
+</html>

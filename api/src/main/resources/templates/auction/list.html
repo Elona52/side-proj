@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>경매물건상세검색</title>
+    
+    <style>
+        :root {
+            --court-blue: #004098;
+            --court-navy: #002855;
+            --court-green: #52b788;
+            --court-red: #d32f2f;
+            --border-gray: #ddd;
+            --bg-light: #f5f5f5;
+            --text-dark: #333;
+            --text-gray: #777;
+        }
+        
+        * {
+            box-sizing: border-box !important;
+        }
+        
+        html, body {
+            font-family: 'Nanum Gothic', 'Malgun Gothic', sans-serif !important;
+            background: #f5f5f5 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            max-width: 100vw !important;
+            overflow-x: hidden !important;
+        }
+        
+        /* ========== 헤더 ========== */
+        .court-header {
+            background: var(--court-blue) !important;
+            color: #fff !important;
+            padding: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        
+        .court-header-top {
+            margin: 0 !important;
+            padding: 10px 40px !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            border-bottom: 1px solid rgba(255,255,255,0.2) !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        
+        .court-logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .court-logo h1 {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #fff;
+        }
+        
+        .court-logo .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: #fff;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .court-logo .logo-text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+        }
+        
+        .court-logo .logo-text .sub {
+            font-size: 12px;
+            font-weight: 400;
+            color: rgba(255,255,255,0.8);
+        }
+        
+        .court-logo .main-btn {
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-size: 13px;
+            text-decoration: none;
+        }
+        
+        .court-header-nav {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .court-header-nav a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 13px;
+            padding: 5px 10px;
+        }
+        
+        .court-header-main {
+            margin: 0 !important;
+            padding: 15px 40px !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        
+        .court-main-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+        
+        .court-main-nav a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 600;
+            margin: 0 15px;
+        }
+        
+        .nav-search-icon {
+            color: #fff;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 8px;
+            margin-left: auto;
+        }
+        
+        /* ========== 메인 컨테이너 ========== */
+        main {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        
+        .list-container {
+            margin: 0 auto !important;
+            padding: 20px 40px !important;
+            display: flex !important;
+            gap: 30px !important;
+            width: 100% !important;
+            max-width: 1400px !important;
+            align-items: flex-start !important;
+        }
+        
+        .left-nav {
+            flex-shrink: 0 !important;
+        }
+        
+        .main-content {
+            flex: 1 !important;
+            min-width: 0 !important;
+        }
+        
+        /* ========== 푸터 ========== */
+        .court-footer {
+            background: #f8f9fa !important;
+            padding: 30px 40px !important;
+            border-top: 1px solid var(--border-gray) !important;
+            margin-top: 60px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        
+        .footer-content {
+            margin: 0 !important;
+            padding: 0 !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            width: 100% !important;
+        }
+        
+        .footer-info {
+            font-size: 13px;
+            color: var(--text-gray);
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .footer-links a {
+            color: var(--text-gray);
+            text-decoration: none;
+            font-size: 13px;
+        }
+        
+        /* 왼쪽 네비게이션 */
+        .left-nav {
+            background: #fff;
+            border: 1px solid var(--border-gray);
+            border-radius: 8px;
+            padding: 0;
+            height: fit-content;
+        }
+        
+        .nav-header {
+            background: var(--court-blue);
+            color: #fff;
+            padding: 15px 20px;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .nav-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .nav-list li {
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .nav-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .nav-list li a {
+            display: block;
+            padding: 14px 20px;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .nav-list li a:hover {
+            background: #f8f9fa;
+            color: var(--court-blue);
+            padding-left: 25px;
+        }
+        
+        .nav-list li a.active {
+            background: var(--court-blue);
+            color: #fff;
+            font-weight: 700;
+        }
+        
+        /* 메인 컨텐츠 */
+        .main-content {
+            background: #fff !important;
+            border: 1px solid var(--border-gray) !important;
+            border-radius: 8px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+        }
+        
+        .breadcrumb {
+            padding: 15px 25px;
+            border-bottom: 1px solid var(--border-gray);
+            font-size: 13px;
+            color: var(--text-gray);
+        }
+        
+        .breadcrumb a {
+            color: var(--text-gray);
+            text-decoration: none;
+        }
+        
+        .breadcrumb a:hover {
+            color: var(--court-blue);
+        }
+        
+        .search-summary {
+            padding: 20px 25px;
+            background: #f8f9fa;
+            border-bottom: 1px solid var(--border-gray);
+        }
+        
+        .search-summary-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+        
+        .search-summary-text {
+            font-size: 14px;
+            color: var(--text-gray);
+        }
+        
+        .search-summary-text strong {
+            color: var(--court-blue);
+            font-weight: 700;
+        }
+        
+        .note {
+            padding: 12px 25px;
+            background: #fffbf0;
+            border-bottom: 1px solid #ffe082;
+            font-size: 13px;
+            color: #795548;
+        }
+        
+        /* 테이블 */
+        .table-container {
+            padding: 25px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            border-radius: 0 !important;
+        }
+        
+        .auction-table {
+            width: 100% !important;
+            max-width: none !important;
+            min-width: 100% !important;
+            border-collapse: collapse !important;
+            font-size: 13px !important;
+            table-layout: fixed !important;
+            border-radius: 0 !important;
+        }
+        
+        .auction-table th,
+        .auction-table td {
+            border-radius: 0 !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            max-height: 120px !important;
+        }
+        
+        .auction-table td {
+            vertical-align: top !important;
+        }
+        
+        .location-details .address {
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .building-info {
+            max-height: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            line-height: 1.4;
+        }
+        
+        .remarks {
+            max-height: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+        }
+        
+        .auction-table thead {
+            background: #f8f9fa;
+            border-top: 2px solid var(--court-blue);
+            border-bottom: 1px solid var(--border-gray);
+        }
+        
+        .auction-table thead th {
+            padding: 15px 10px;
+            text-align: center;
+            font-weight: 700;
+            color: var(--text-dark);
+            font-size: 14px;
+        }
+        
+        .auction-table tbody tr {
+            height: 140px;
+            max-height: 140px;
+        }
+        
+        .auction-table tbody td {
+            padding: 15px 10px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: top;
+            height: 140px;
+            max-height: 140px;
+        }
+        
+        .auction-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .item-number {
+            text-align: center;
+            color: var(--text-gray);
+            font-weight: 600;
+        }
+        
+        .case-number {
+            font-size: 12px;
+            color: var(--text-gray);
+        }
+        
+        .location-details {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .usage-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: var(--court-blue);
+            color: #fff;
+            border-radius: 0;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .address {
+            color: var(--text-dark);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 5px;
+        }
+        
+        .address:hover {
+            color: var(--court-blue);
+            text-decoration: underline;
+        }
+        
+        .building-info {
+            font-size: 12px;
+            color: var(--text-gray);
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 0;
+            margin-bottom: 5px;
+        }
+        
+        
+        .remarks {
+            font-size: 12px;
+            color: #d32f2f;
+            line-height: 1.6;
+        }
+        
+        .price-info {
+            text-align: right;
+        }
+        
+        .price-label {
+            font-size: 12px;
+            color: var(--text-gray);
+            margin-bottom: 5px;
+        }
+        
+        .price-value {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+        
+        .price-value.min-price {
+            font-size: 16px;
+            color: var(--court-blue);
+        }
+        
+        .price-percent {
+            font-size: 12px;
+            color: var(--court-green);
+            font-weight: 600;
+        }
+        
+        .dept-info {
+            text-align: center;
+        }
+        
+        .dept-name {
+            font-size: 13px;
+            color: var(--text-dark);
+            margin-bottom: 5px;
+        }
+        
+        .auction-date {
+            font-size: 13px;
+            color: var(--court-blue);
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .status-badge-table {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #fff3cd;
+            color: #856404;
+            border-radius: 0;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-badge-table.new {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-badge-table.failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        /* 페이지네이션 */
+        .pagination-wrapper {
+            padding: 30px 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .pagination {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .pagination button,
+        .pagination a {
+            padding: 8px 12px;
+            border: 1px solid var(--border-gray);
+            background: #fff;
+            color: var(--text-dark);
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 13px;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .pagination button:hover,
+        .pagination a:hover {
+            background: #f0f0f0;
+        }
+        
+        .pagination button.active,
+        .pagination a.active {
+            background: var(--court-blue);
+            color: #fff;
+            border-color: var(--court-blue);
+            font-weight: 700;
+        }
+        
+        .page-size-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+        
+        .page-size-selector select {
+            padding: 6px 10px;
+            border: 1px solid var(--border-gray);
+            border-radius: 4px;
+        }
+        
+        /* 액션 버튼 */
+        .action-buttons {
+            padding: 20px 25px;
+            border-top: 1px solid var(--border-gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .action-buttons .left,
+        .action-buttons .right {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .action-btn {
+            padding: 10px 20px;
+            border: 1px solid var(--border-gray);
+            background: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .action-btn:hover {
+            background: var(--court-blue);
+            color: #fff;
+            border-color: var(--court-blue);
+        }
+        
+        .action-btn.primary {
+            background: var(--court-blue);
+            color: #fff;
+        }
+        
+        .action-btn.primary:hover {
+            background: var(--court-navy);
+        }
+    </style>
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body style="margin: 0 !important; padding: 0 !important; width: 100% !important; max-width: 100vw !important; overflow-x: hidden !important; background: #f5f5f5 !important; font-family: 'Nanum Gothic', sans-serif !important;">
+
+<!-- =================== 헤더 (메인/로그인과 동일 스타일) =================== -->
+<header class="court-header">
+    <!-- Hidden Input -->
+    <input type="hidden" id="loginId" th:value="${session.loginId}">
+    <input type="hidden" id="isLogin" th:value="${session.isLogin != null ? 'true' : 'false'}">
+    <div class="court-header-top" style="color: #333 !important; background: #fff !important;">
+        <div class="court-logo" style="color: #333 !important;">
+            <h1 style="color: #333 !important; margin: 0; padding: 0; display: flex; align-items: center;">
+                <img src="/img/logo.gif" alt="법원경매정보 로고" style="height: 50px; width: auto; max-width: 300px; object-fit: contain; display: block;">
+            </h1>
+            <a href="/" class="main-btn" style="background: #f5f5f5 !important; color: #333 !important; border: 1px solid #ddd !important;">경매정보 메인화면 바로가기</a>
+        </div>
+        <nav class="court-header-nav" style="color: #333 !important;">
+            <th:block th:if="${session.isLogin == null}">
+                <a th:href="@{/memberLogin}" style="color: #333 !important;">로그인</a>
+                <a th:href="@{/memberJoin}" style="color: #333 !important;">회원가입</a>
+                <a href="#" style="color: #333 !important;">아이디/비밀번호 찾기</a>
+            </th:block>
+            <th:block th:if="${session.isLogin != null}">
+                <a href="#" style="color: #333 !important;"><span th:text="${session.loginId}" style="color: #333 !important;">사용자</span>님</a>
+                <a th:href="@{/myFavorites}" style="color: #333 !important;">즐겨찾기</a>
+                <a th:href="@{/logout}" style="color: #333 !important;">로그아웃</a>
+            </th:block>
+            <a th:href="@{/sitemap}" style="color: #333 !important;">사이트맵</a>
+        </nav>
+    </div>
+    <div class="court-header-main">
+        <nav class="court-main-nav" style="display: flex; justify-content: center; align-items: center;">
+            <div style="display: flex; gap: 40px;">
+                <a th:href="@{/new-items}" style="font-size: 17px; font-weight: 700;">경매공고</a>
+                <a th:href="@{/auctionList}" style="font-size: 17px; font-weight: 700;">경매물건</a>
+                <a href="#" style="font-size: 17px; font-weight: 700;">매각통계</a>
+                <a th:href="@{/boardList}" style="font-size: 17px; font-weight: 700;">게시판</a>
+                <a href="#" style="font-size: 17px; font-weight: 700;">이용안내</a>
+                <a href="#" onclick="checkLoginAndNavigate('/myFavorites'); return false;" style="font-size: 17px; font-weight: 700; display: inline-block !important; visibility: visible !important;">나의경매</a>
+            </div>
+            <i class="fas fa-search nav-search-icon" style="position: absolute; right: 40px;"></i>
+        </nav>
+    </div>
+</header>
+
+<!-- =================== 메인 컨텐츠 =================== -->
+<main class="list-container" style="margin: 0 auto !important; padding: 20px 40px !important; display: flex !important; gap: 30px !important; width: 100% !important; max-width: 1400px !important; align-items: flex-start !important;">
+    
+    <!-- 왼쪽 네비게이션 -->
+    <aside class="left-nav" style="width: 220px !important; max-width: 220px !important; min-width: 220px !important; flex-shrink: 0 !important; background: #fff !important; border: 1px solid #ddd !important; border-radius: 0 !important;">
+        <!-- 경매공고 페이지 (신규물건 또는 50% 체감 물건)일 때 -->
+        <th:block th:if="${category == '신규물건' or category == '50% 체감 물건'}">
+            <div class="nav-header">• 경매공고</div>
+            <ul class="nav-list">
+                <li><a th:href="@{/new-items}" 
+                       th:class="${category == '신규물건' ? 'active' : ''}">신규물건</a></li>
+                <li><a th:href="@{/discount-50}"
+                       th:class="${category == '50% 체감 물건' ? 'active' : ''}">50% 체감 물건</a></li>
+            </ul>
+        </th:block>
+        
+        <!-- 경매물건 페이지일 때 -->
+        <th:block th:unless="${category == '신규물건' or category == '50% 체감 물건'}">
+        <div class="nav-header">• 경매물건</div>
+        <ul class="nav-list">
+            <li><a th:href="@{/auctionList}" 
+                   th:class="${category == null or category == 'all' ? 'active' : ''}">물건상세검색 (전체)</a></li>
+            <li><a th:href="@{/auctionList(category='주거용건물')}"
+                   th:class="${category != null and category.contains('주거용건물') ? 'active' : ''}">주거용건물</a></li>
+            <li><a th:href="@{/auctionList(category='상가용및업무용건물')}"
+                   th:class="${category != null and category.contains('상가용및업무용건물') ? 'active' : ''}">상가용건물</a></li>
+            <li><a th:href="@{/auctionList(category='토지')}"
+                   th:class="${category != null and category.contains('토지') ? 'active' : ''}">토지</a></li>
+            <li><a th:href="@{/auctionList(category='자동차')}"
+                   th:class="${category != null and category.contains('자동차') ? 'active' : ''}">자동차·중기</a></li>
+            <li><a th:href="@{/auctionList(category='산업용및기타특수용건물')}"
+                   th:class="${category != null and category.contains('산업용및기타특수용건물') ? 'active' : ''}">산업용건물</a></li>
+            <li><a th:href="@{/auctionList(category='용도복합용건물')}"
+                   th:class="${category != null and category.contains('용도복합용건물') ? 'active' : ''}">용도복합건물</a></li>
+            <li><a th:href="@{/auctionList(category='기계기구')}"
+                   th:class="${category != null and category.contains('기계기구') ? 'active' : ''}">기계기구</a></li>
+            <li><a href="#" onclick="alert('준비중입니다'); return false;">지도검색</a></li>
+        </ul>
+        </th:block>
+    </aside>
+    
+    <!-- 메인 컨텐츠 -->
+    <section class="main-content" style="background: #fff !important; border: 1px solid #ddd !important; border-radius: 0 !important; flex: 1 !important; min-width: 0 !important; overflow: hidden !important;">
+        
+        <!-- 브레드크럼 -->
+        <div class="breadcrumb">
+            <a href="/">▲ HOME</a> &gt; 
+            <!-- 경매공고 페이지일 때 -->
+            <th:block th:if="${category == '신규물건' or category == '50% 체감 물건'}">
+                <a th:href="@{/new-items}">경매공고</a> &gt; 
+                <span th:text="${category == '신규물건' ? '신규물건' : '50% 체감 물건'}">신규물건</span>
+            </th:block>
+            <!-- 경매물건 페이지일 때 -->
+            <th:block th:unless="${category == '신규물건' or category == '50% 체감 물건'}">
+            <a th:href="@{/auctionList}">경매물건</a> &gt; 
+            <span>물건상세검색</span>
+            </th:block>
+        </div>
+        
+        <!-- 검색 조건 -->
+        <div class="search-summary">
+            <div class="search-summary-title">검색조건</div>
+            <div class="search-summary-text">
+                <th:block th:if="${category != null and category != 'all'}">
+                    카테고리 <strong th:text="${category}">부동산 / 아파트</strong> | 
+                </th:block>
+                <th:block th:unless="${category != null and category != 'all'}">
+                    카테고리 <strong>전체</strong> | 
+                </th:block>
+                총 물건수 <strong th:text="${totalCount} + '건'">100건</strong>
+            </div>
+        </div>
+        
+        <!-- 안내 문구 -->
+        <div class="note">
+            • 소재지 및 내역을 클릭하면 물건상세 페이지로 이동합니다.
+        </div>
+        
+        <!-- 테이블 -->
+        <div class="table-container" style="padding: 25px !important; width: 100% !important; max-width: none !important; overflow-x: auto !important;">
+            <table class="auction-table" style="width: 100% !important; max-width: none !important; min-width: 100% !important; border-collapse: collapse !important; font-size: 13px !important; table-layout: fixed !important;">
+                <thead>
+                    <tr>
+                        <th style="width: 3%;">
+                            <input type="checkbox" id="selectAll">
+                        </th>
+                        <th style="width: 5%;">물건<br>번호 ▲</th>
+                        <th style="width: 40%;">소재지 및 내역 ▲</th>
+                        <th style="width: 15%;">비고</th>
+                        <th style="width: 20%;">감정평가액 ▲<br>최저매각가격</th>
+                        <th style="width: 17%;">담당계<br>매각기일 ▲</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <th:block th:if="${atList != null and !atList.isEmpty()}">
+                        <tr th:each="item, stat : ${atList}">
+                            <!-- 체크박스 -->
+                            <td style="text-align: center;">
+                                <input type="checkbox" th:value="${item.cltrNo}">
+                            </td>
+                            
+                            <!-- 물건번호 -->
+                            <td class="item-number" th:text="${stat.count}">1</td>
+                            
+                            <!-- 소재지 및 내역 -->
+                            <td>
+                                <div class="location-details">
+                                    <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 5px;">
+                                        <span class="usage-badge">온비드</span>
+                                        <span class="case-number" th:text="'물건번호: ' + ${item.cltrNo}" style="font-size: 11px; color: #999;">물건번호: 1234567</span>
+                                    </div>
+                                    <div class="address" th:text="${item.name}" 
+                                         th:data-cltr-no="${item.cltrNo}"
+                                         onclick="location.href='/api-item-detail?cltrNo=' + this.dataset.cltrNo"
+                                         style="cursor: pointer;">
+                                        서울특별시 강남구 역삼동 123-45
+                                    </div>
+                                    <div class="building-info" th:if="${item.content != null}" th:text="${item.content}">
+                                        [집합건물 철근콘크리트조 84.30㎡ 지하1층 31.49㎡]
+                                    </div>
+                                </div>
+                            </td>
+                            
+                            <!-- 비고 -->
+                            <td class="remarks">
+                                <div th:if="${item.count > 0}">
+                                    • 입찰참가자 <span th:text="${item.count}">0</span>명
+                                </div>
+                                <div>• 공공경매</div>
+                            </td>
+                            
+                            <!-- 감정평가액 -->
+                            <td class="price-info">
+                                <div class="price-label">감정평가액</div>
+                                <div class="price-value" th:text="${item.endPrice > 0 ? #numbers.formatInteger(item.endPrice, 3, 'COMMA') : '-'}">622,000,000</div>
+                                <div class="price-label">최저매각가격</div>
+                                <div class="price-value min-price">
+                                    <span th:text="${item.startPrice > 0 ? #numbers.formatInteger(item.startPrice, 3, 'COMMA') : '-'}">398,080,000</span>
+                                    <span th:if="${item.endPrice > 0 and item.startPrice > 0}" 
+                                          class="price-percent" 
+                                          th:text="'(' + ${#numbers.formatInteger((item.startPrice * 100) / item.endPrice, 0)} + '%)'">
+                                        (64%)
+                                    </span>
+                                </div>
+                            </td>
+                            
+                            <!-- 담당계 매각기일 -->
+                            <td class="dept-info">
+                                <div class="dept-name">캠코</div>
+                                <div class="auction-date" th:if="${item.endDate != null}" th:text="${#dates.format(item.endDate, 'yyyy.MM.dd')}">2025.11.20</div>
+                                <div class="auction-date" th:unless="${item.endDate != null}">-</div>
+                                <div>
+                                    <span th:if="${item.count == 0}" class="status-badge-table new">신건</span>
+                                    <span th:if="${item.count > 0 and item.count <= 2}" class="status-badge-table failed" th:text="|유찰 ${item.count}회|">유찰 2회</span>
+                                    <span th:if="${item.count > 2}" class="status-badge-table" th:text="|유찰 ${item.count}회|">유찰 3회</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </th:block>
+                    <tr th:if="${atList == null or atList.isEmpty()}">
+                        <td colspan="6" style="text-align: center; padding: 60px; color: var(--text-gray);">
+                            조회된 물건이 없습니다.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 페이지네이션 -->
+        <div class="pagination-wrapper">
+            <div class="pagination" th:with="isNew=${category == '신규물건'}, isDiscount=${category == '50% 체감 물건'}">
+                <a th:if="${pageNum > 1}"
+                   th:href="${isNew} ? @{/new-items(pageNum=1, sido=${sido})}
+                             : (${isDiscount} ? @{/discount-50(pageNum=1, sido=${sido})}
+                             : @{/auctionList(pageNum=1, category=${category}, period=${period}, printType=${printType}, sido=${sido})})">&lt;&lt;</a>
+                <a th:if="${pageNum > 1}"
+                   th:href="${isNew} ? @{/new-items(pageNum=${pageNum - 1}, sido=${sido})}
+                             : (${isDiscount} ? @{/discount-50(pageNum=${pageNum - 1}, sido=${sido})}
+                             : @{/auctionList(pageNum=${pageNum - 1}, category=${category}, period=${period}, printType=${printType}, sido=${sido})})">&lt;</a>
+                
+                <th:block th:if="${pageCount != null and startPage != null and endPage != null}">
+                    <th:block th:each="i : ${#numbers.sequence(startPage, endPage)}">
+                        <a th:href="${isNew} ? @{/new-items(pageNum=${i}, sido=${sido})}
+                                   : (${isDiscount} ? @{/discount-50(pageNum=${i}, sido=${sido})}
+                                   : @{/auctionList(pageNum=${i}, category=${category}, period=${period}, printType=${printType}, sido=${sido})})"
+                           th:class="${i == pageNum ? 'active' : ''}"
+                           th:text="${i}">1</a>
+                    </th:block>
+                </th:block>
+                
+                <a th:if="${pageNum != null and pageCount != null and pageNum < pageCount}"
+                   th:href="${isNew} ? @{/new-items(pageNum=${pageNum + 1}, sido=${sido})}
+                             : (${isDiscount} ? @{/discount-50(pageNum=${pageNum + 1}, sido=${sido})}
+                             : @{/auctionList(pageNum=${pageNum + 1}, category=${category}, period=${period}, printType=${printType}, sido=${sido})})">&gt;</a>
+                <a th:if="${pageNum != null and pageCount != null and pageNum < pageCount}"
+                   th:href="${isNew} ? @{/new-items(pageNum=${pageCount}, sido=${sido})}
+                             : (${isDiscount} ? @{/discount-50(pageNum=${pageCount}, sido=${sido})}
+                             : @{/auctionList(pageNum=${pageCount}, category=${category}, period=${period}, printType=${printType}, sido=${sido})})">&gt;&gt;</a>
+            </div>
+            
+            <div class="page-size-selector">
+                <label for="pageSize">페이지당</label>
+                <select id="pageSize" onchange="changePageSize(this.value)">
+                    <option value="10">10</option>
+                    <option value="20" selected>20</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- 액션 버튼 -->
+        <div class="action-buttons">
+            <div class="left">
+                <button class="action-btn" onclick="window.print()">
+                    <i class="fas fa-print"></i> 인쇄하기
+                </button>
+                <button class="action-btn" onclick="compareItems()">
+                    <i class="fas fa-balance-scale"></i> 물건비교
+                </button>
+                <button class="action-btn primary" id="addFavoritesBtn" onclick="addToFavoritesMultiple(); return false;">
+                    <i class="fas fa-star"></i> 관심물건등록
+                </button>
+            </div>
+            <div class="right">
+                <button class="action-btn" onclick="history.back()">
+                    <i class="fas fa-arrow-left"></i> 이전
+                </button>
+            </div>
+        </div>
+        
+    </section>
+    
+</main>
+
+<!-- =================== 푸터 =================== -->
+<footer class="court-footer" style="background: #f8f9fa !important; padding: 30px 40px !important; border-top: 1px solid #ddd !important; width: 100% !important; max-width: 100% !important; margin: 0 !important;">
+    <div class="footer-content">
+        <div class="footer-info">
+            <p><strong>유의사항</strong></p>
+            <p style="font-size: 12px; line-height: 1.8; color: #666;">
+                • 이 정보는 참고용이며, 정확한 내용은 캠코 공식 사이트를 확인하시기 바랍니다.<br>
+                • 입찰 전 반드시 물건의 상태와 권리관계를 확인하시기 바랍니다.<br>
+                • 제공된 정보의 정확성에 대해서는 책임지지 않습니다.
+            </p>
+        </div>
+    </div>
+</footer>
+
+<!-- JavaScript -->
+<script>
+// 페이지 로드 시 레이아웃 강제 수정
+window.addEventListener('DOMContentLoaded', function() {
+    console.log('=== 레이아웃 강제 수정 시작 ===');
+    
+    // Body 스타일
+    document.body.style.cssText = 'margin: 0 !important; padding: 0 !important; width: 100% !important; max-width: 100vw !important; overflow-x: hidden !important;';
+    document.documentElement.style.cssText = 'margin: 0 !important; padding: 0 !important; width: 100% !important; max-width: 100vw !important; overflow-x: hidden !important;';
+    
+    // List Container
+    let listContainer = document.querySelector('.list-container');
+    if (listContainer) {
+        listContainer.style.cssText = 'margin: 0 auto !important; padding: 20px 40px !important; display: flex !important; gap: 30px !important; width: 100% !important; max-width: 1400px !important;';
+        console.log('List container width:', listContainer.offsetWidth);
+    }
+    
+    // Main Content
+    let mainContent = document.querySelector('.main-content');
+    if (mainContent) {
+        mainContent.style.cssText = 'background: #fff !important; border: 1px solid #ddd !important; border-radius: 0 !important; flex: 1 !important; min-width: 0 !important; width: 100% !important;';
+        console.log('Main content width:', mainContent.offsetWidth);
+    }
+    
+    // Table Container
+    let tableContainer = document.querySelector('.table-container');
+    if (tableContainer) {
+        tableContainer.style.cssText = 'padding: 25px !important; width: 100% !important; max-width: none !important;';
+        console.log('Table container width:', tableContainer.offsetWidth);
+    }
+    
+    // Table
+    let table = document.querySelector('.auction-table');
+    if (table) {
+        table.style.cssText = 'width: 100% !important; max-width: none !important; min-width: 100% !important; border-collapse: collapse !important; table-layout: fixed !important;';
+        console.log('Table width:', table.offsetWidth);
+    }
+    
+    console.log('Window width:', window.innerWidth);
+    console.log('=== 레이아웃 강제 수정 완료 ===');
+});
+
+// 전체 선택
+document.getElementById('selectAll')?.addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('.auction-table tbody input[type="checkbox"]');
+    checkboxes.forEach(cb => cb.checked = this.checked);
+});
+
+// 페이지 크기 변경
+function changePageSize(size) {
+    const url = new URL(window.location);
+    url.searchParams.set('pageSize', size);
+    url.searchParams.set('pageNum', '1');
+    window.location.href = url.toString();
+}
+
+// 물건 비교
+function compareItems() {
+    const selected = Array.from(document.querySelectorAll('.auction-table tbody input[type="checkbox"]:checked'))
+        .map(cb => cb.value);
+    
+    if (selected.length === 0) {
+        alert('비교할 물건을 선택해주세요.');
+        return;
+    }
+    
+    if (selected.length > 5) {
+        alert('최대 5개까지 비교 가능합니다.');
+        return;
+    }
+    
+    alert(`${selected.length}개 물건 비교 기능은 준비 중입니다.`);
+}
+
+// 관심물건 등록 (여러 개)
+function addToFavoritesMultiple() {
+    // 즉시 확인: 함수가 호출되는지
+    alert('관심물건 등록 함수가 호출되었습니다! (디버깅용)');
+    
+    console.log('========================================');
+    console.log('=== 관심물건 등록 (여러 개) 함수 호출 ===');
+    console.log('========================================');
+    
+    // jQuery 확인
+    if (typeof jQuery === 'undefined' && typeof $ === 'undefined') {
+        alert('jQuery가 로드되지 않았습니다. 페이지를 새로고침해주세요.');
+        console.error('❌ jQuery가 없습니다!');
+        return;
+    }
+    const $ = window.jQuery || window.$;
+    console.log('✅ jQuery 확인됨');
+    
+    // 선택된 체크박스 찾기
+    const checkboxes = document.querySelectorAll('.auction-table tbody input[type="checkbox"]:checked');
+    console.log('선택된 체크박스 개수:', checkboxes.length);
+    
+    if (checkboxes.length === 0) {
+        alert('관심물건으로 등록할 물건을 선택해주세요.');
+        return;
+    }
+    
+    // 체크박스의 value 값 확인
+    const selected = [];
+    checkboxes.forEach((cb, idx) => {
+        const value = cb.value;
+        console.log(`체크박스 [${idx}]: value="${value}"`);
+        if (value && value !== '' && value !== 'null') {
+            selected.push(value);
+        }
+    });
+    
+    console.log('선택된 cltrNo 목록:', selected);
+    
+    if (selected.length === 0) {
+        alert('유효한 물건 정보가 없습니다. 체크박스의 값이 비어있습니다.');
+        console.error('❌ 선택된 값이 없음');
+        return;
+    }
+    
+    if (!confirm(`${selected.length}개 물건을 관심물건으로 등록하시겠습니까?`)) {
+        return;
+    }
+    
+    console.log('즐겨찾기 추가 시작 - 개수:', selected.length);
+    
+    // 각 cltrNo에 대해 즐겨찾기 추가 요청
+    let successCount = 0;
+    let failCount = 0;
+    let completedCount = 0;
+    const errors = [];
+    
+    selected.forEach((cltrNo, index) => {
+        console.log(`[${index + 1}/${selected.length}] cltrNo="${cltrNo}" 즐겨찾기 추가 시도`);
+        
+        $.ajax({
+            url: '/api/favorites',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ cltrNo: cltrNo }),
+            timeout: 15000,
+            beforeSend: function() {
+                console.log(`[${index + 1}/${selected.length}] AJAX 요청 전송 시작`);
+            },
+            success: function(response) {
+                completedCount++;
+                console.log(`[${index + 1}/${selected.length}] 응답 받음:`, response);
+                
+                if (response && response.success === true) {
+                    successCount++;
+                    console.log(`✅ [${index + 1}/${selected.length}] 성공: cltrNo=${cltrNo}`);
+                } else {
+                    failCount++;
+                    const msg = response && response.message ? response.message : '알 수 없는 오류';
+                    errors.push(`cltrNo ${cltrNo}: ${msg}`);
+                    console.error(`❌ [${index + 1}/${selected.length}] 실패:`, response);
+                }
+                
+                // 모든 요청 완료 후 결과 표시
+                if (completedCount === selected.length) {
+                    console.log('========================================');
+                    console.log('모든 요청 완료 - 성공:', successCount, '실패:', failCount);
+                    console.log('========================================');
+                    
+                    if (successCount === selected.length) {
+                        alert(`✅ ${successCount}개 물건이 관심물건으로 등록되었습니다!`);
+                    } else if (successCount > 0) {
+                        alert(`⚠️ ${successCount}개 성공, ${failCount}개 실패했습니다.\n\n실패한 항목:\n${errors.join('\n')}`);
+                    } else {
+                        alert(`❌ 관심물건 등록에 실패했습니다.\n\n오류:\n${errors.join('\n')}`);
+                    }
+                }
+            },
+            error: function(xhr, status, error) {
+                completedCount++;
+                failCount++;
+                const errorMsg = xhr.responseJSON && xhr.responseJSON.message 
+                    ? xhr.responseJSON.message 
+                    : `HTTP ${xhr.status}: ${error}`;
+                errors.push(`cltrNo ${cltrNo}: ${errorMsg}`);
+                console.error(`❌ [${index + 1}/${selected.length}] AJAX 오류:`, xhr.status, error);
+                console.error('응답:', xhr.responseText);
+                
+                // 모든 요청 완료 후 결과 표시
+                if (completedCount === selected.length) {
+                    console.log('========================================');
+                    console.log('모든 요청 완료 - 성공:', successCount, '실패:', failCount);
+                    console.log('========================================');
+                    
+                    if (successCount > 0) {
+                        alert(`⚠️ ${successCount}개 성공, ${failCount}개 실패했습니다.\n\n실패한 항목:\n${errors.join('\n')}`);
+                    } else {
+                        if (xhr.status === 401 || xhr.status === 403) {
+                            alert('로그인이 필요한 서비스입니다.');
+                            window.location.href = '/memberLogin';
+                        } else {
+                            alert(`❌ 관심물건 등록 중 오류가 발생했습니다.\n\n오류:\n${errors.join('\n')}`);
+                        }
+                    }
+                }
+            }
+        });
+    });
+}
+
+// 결제 페이지로 이동
+function goToPayment(id) {
+    if (!id) {
+        alert('경매 번호를 찾을 수 없습니다.');
+        return;
+    }
+    // 결제 페이지로 이동 (itemId로 전달)
+    window.location.href = '/payment/checkout?itemId=' + id;
+}
+
+// 로그인 상태 확인 후 이동
+function checkLoginAndNavigate(url) {
+    const isLogin = document.getElementById('isLogin');
+    if (isLogin && isLogin.value === 'true') {
+        window.location.href = url;
+    } else {
+        alert('로그인 후 이용가능합니다');
+    }
+}
+
+// 페이지 로드 시 나의경매 버튼이 항상 보이도록 강제
+document.addEventListener('DOMContentLoaded', function() {
+    const myAuctionLinks = document.querySelectorAll('a[onclick*="checkLoginAndNavigate"]');
+    myAuctionLinks.forEach(function(link) {
+        link.style.display = 'inline-block';
+        link.style.visibility = 'visible';
+        link.style.opacity = '1';
+    });
+});
+</script>
+
+</body>
+</html>

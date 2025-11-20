@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>아이디 찾기 - 법원경매정보</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Court Auction CSS -->
+    <link rel="stylesheet" th:href="@{/css/auction.css}">
+    <link rel="stylesheet" th:href="@{/css/kamco.css}">
+    <link rel="stylesheet" th:href="@{/css/member.css}">
+    
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            font-family: 'Nanum Gothic', 'Malgun Gothic', sans-serif;
+            background: #f5f5f5;
+        }
+        
+        .detail-container {
+            margin: 0;
+            padding: 30px 40px;
+            width: 100%;
+            box-sizing: border-box;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .find-container {
+            max-width: 500px;
+            margin: 50px auto;
+            background: #fff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .find-title {
+            font-size: 24px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .phone-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .phone-group input {
+            flex: 1;
+        }
+        
+        .btn-find {
+            width: 100%;
+            padding: 14px;
+            background: #004098;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .btn-find:hover {
+            background: #003080;
+        }
+        
+        .result-box {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .result-box.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .result-box.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .back-link a {
+            color: #004098;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+<!-- =================== 헤더 =================== -->
+<div th:replace="~{layout/header :: header}"></div>
+
+<!-- =================== 메인 컨텐츠 =================== -->
+<main class="detail-container">
+    <div class="find-container">
+        <h2 class="find-title">아이디 찾기</h2>
+        
+        <form id="findIdForm">
+            <div class="form-group">
+                <label for="name">이름</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="phone">휴대전화</label>
+                <div class="phone-group">
+                    <input type="text" id="mobile1" name="mobile1" placeholder="010" maxlength="3" required>
+                    <input type="text" id="mobile2" name="mobile2" placeholder="12345678" maxlength="8" required>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-find">아이디 찾기</button>
+        </form>
+        
+        <div id="resultBox" class="result-box" style="display: none;"></div>
+        
+        <div class="back-link">
+            <a th:href="@{/memberLogin}">로그인 페이지로 돌아가기</a>
+        </div>
+    </div>
+</main>
+
+<!-- =================== 푸터 =================== -->
+<div th:replace="~{layout/footer :: footer}"></div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('#findIdForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        const name = $('#name').val();
+        const mobile1 = $('#mobile1').val();
+        const mobile2 = $('#mobile2').val();
+        
+        if(!name || !mobile1 || !mobile2) {
+            alert('모든 항목을 입력해주세요.');
+            return;
+        }
+        
+        $.ajax({
+            url: window.location.origin + '/findId',
+            type: 'POST',
+            contentType: 'application/x-www-form-urlencoded',
+            data: {
+                name: name,
+                mobile1: mobile1,
+                mobile2: mobile2
+            },
+            success: function(result) {
+                const resultBox = $('#resultBox');
+                resultBox.show();
+                
+                if(result.success) {
+                    resultBox.removeClass('error').addClass('success');
+                    resultBox.html('<strong>아이디를 찾았습니다!</strong><br>아이디: <strong>' + result.id + '</strong>');
+                } else {
+                    resultBox.removeClass('success').addClass('error');
+                    resultBox.html('<strong>오류</strong><br>' + result.message);
+                }
+            },
+            error: function() {
+                const resultBox = $('#resultBox');
+                resultBox.show();
+                resultBox.removeClass('success').addClass('error');
+                resultBox.html('<strong>오류</strong><br>서버 오류가 발생했습니다.');
+            }
+        });
+    });
+    
+    // 전화번호 입력 제한
+    $('#mobile1, #mobile2').on('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    });
+});
+</script>
+
+<!-- =================== 푸터 =================== -->
+<div th:replace="~{layout/footer :: footer}"></div>
+
+</body>
+</html>

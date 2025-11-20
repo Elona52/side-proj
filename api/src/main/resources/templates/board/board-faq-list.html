@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ - 게시판</title>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Court Auction CSS -->
+    <link rel="stylesheet" th:href="@{/css/auction.css}">
+    <link rel="stylesheet" th:href="@{/css/kamco.css}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <style>
+        :root {
+            --court-blue: #004098;
+            --court-navy: #002855;
+            --border-gray: #ddd;
+            --bg-light: #f5f5f5;
+            --text-dark: #333;
+            --text-gray: #777;
+        }
+
+        /* * { box-sizing: border-box; } - auction.css에서 관리 */
+        /* html, body 스타일은 auction.css에서 관리 */
+
+        /* ========== 헤더 (auction/list.html 과 동일 스타일) ========== */
+
+        /* ========== 메인 레이아웃 ========== */
+        .board-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            display: flex;
+            gap: 30px;
+        }
+
+        .side-menu {
+            width: 250px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 0;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .side-menu-header {
+            background: var(--court-blue);
+            color: #fff;
+            padding: 15px 20px;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .side-menu-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .side-menu-item {
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .side-menu-item a {
+            display: block;
+            padding: 14px 20px;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .side-menu-item a:hover {
+            background: #f8f9fa;
+            color: var(--court-blue);
+            padding-left: 25px;
+        }
+
+        .side-menu-item.active a {
+            background: var(--court-blue);
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .main-content {
+            flex: 1;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            min-width: 0;
+        }
+
+        .breadcrumb {
+            padding: 15px 25px;
+            border-bottom: 1px solid var(--border-gray);
+            font-size: 13px;
+            color: var(--text-gray);
+        }
+
+        .breadcrumb a {
+            color: var(--text-gray);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            color: var(--court-blue);
+        }
+
+        .search-summary {
+            padding: 20px 25px;
+            background: #f8f9fa;
+            border-bottom: 1px solid var(--border-gray);
+        }
+
+        .search-summary-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+
+        .search-summary-text {
+            font-size: 14px;
+            color: var(--text-gray);
+        }
+
+        .search-summary-text strong {
+            color: var(--court-blue);
+            font-weight: 700;
+        }
+
+        .note {
+            padding: 12px 25px;
+            background: #fffbf0;
+            border-bottom: 1px solid #ffe082;
+            font-size: 13px;
+            color: #795548;
+        }
+
+        /* ========== 게시판 테이블 ========== */
+        .table-container {
+            padding: 25px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        .faq-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            font-size: 13px !important;
+            table-layout: fixed !important;
+        }
+
+        .faq-table thead {
+            background: #f8f9fa;
+            border-top: 2px solid var(--court-blue);
+            border-bottom: 1px solid var(--border-gray);
+        }
+
+        .faq-table th {
+            padding: 12px 10px;
+            text-align: center;
+            font-weight: 700;
+            color: var(--text-dark);
+            font-size: 14px;
+        }
+
+        .faq-table tbody tr {
+            height: 60px;
+        }
+
+        .faq-table tbody td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+        }
+
+        .faq-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .faq-number {
+            text-align: center;
+            color: var(--text-gray);
+            font-weight: 600;
+        }
+
+        .faq-category {
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-dark);
+        }
+
+        .faq-title {
+            text-align: left;
+        }
+
+        .faq-title a {
+            color: var(--court-blue);
+            text-decoration: none;
+        }
+
+        .faq-title a:hover {
+            text-decoration: underline;
+        }
+
+        .faq-link,
+        .faq-views {
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .faq-link a {
+            color: var(--court-blue);
+            text-decoration: underline;
+        }
+
+        /* ========== 페이지네이션 ========== */
+        .pagination-wrapper {
+            padding: 30px 25px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .pagination {
+            display: flex;
+            gap: 5px;
+        }
+
+        .pagination a,
+        .pagination span {
+            padding: 8px 12px;
+            border: 1px solid var(--border-gray);
+            background: #fff;
+            color: var(--text-dark);
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 13px;
+            text-decoration: none;
+        }
+
+        .pagination a:hover {
+            background: #f0f0f0;
+        }
+
+        .pagination .current {
+            background: var(--court-blue);
+            color: #fff;
+            border-color: var(--court-blue);
+            font-weight: 700;
+        }
+
+        .page-size-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .page-size-selector select {
+            padding: 6px 10px;
+            border: 1px solid var(--border-gray);
+            border-radius: 4px;
+        }
+
+        /* ========== 상세 보기 카드 ========== */
+        .detail-wrapper {
+            margin: 0 25px 30px 25px;
+            padding: 20px 25px 25px 25px;
+            border-top: 1px solid var(--border-gray);
+            border-bottom: 1px solid var(--border-gray);
+            background: #f9fafb;
+        }
+
+        .detail-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin: 0 0 8px 0;
+        }
+
+        .detail-meta {
+            font-size: 12px;
+            color: var(--text-gray);
+            margin-bottom: 16px;
+        }
+
+        .detail-content {
+            font-size: 14px;
+            color: var(--text-dark);
+            line-height: 1.6;
+            white-space: pre-line;
+            background: #fff;
+            border: 1px solid #eee;
+            padding: 16px 18px;
+            border-radius: 4px;
+        }
+
+        .reply-section {
+            margin-top: 20px;
+        }
+
+        .reply-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .reply-item {
+            border-top: 1px solid #eee;
+            padding: 8px 0;
+            font-size: 13px;
+        }
+
+        .reply-meta {
+            color: var(--text-gray);
+            margin-bottom: 4px;
+        }
+
+        .reply-content {
+            color: var(--text-dark);
+        }
+
+        /* ========== 푸터 ========== */
+    </style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<!-- =================== 헤더 =================== -->
+<div th:replace="~{layout/header :: header}"></div>
+
+<!-- 메인 컨텐츠 -->
+<main class="board-container">
+    <!-- 좌측 네비 -->
+    <aside class="side-menu">
+        <div class="side-menu-header">• 게시판</div>
+        <ul class="side-menu-list">
+            <li class="side-menu-item active"><a th:href="@{/boardFaq}">FAQ</a></li>
+            <li class="side-menu-item"><a href="#">공지사항</a></li>
+            <li class="side-menu-item"><a href="#">문의게시판</a></li>
+            <li class="side-menu-item"><a href="#">자료실</a></li>
+        </ul>
+    </aside>
+
+    <!-- 오른쪽 메인 -->
+    <section class="main-content">
+        <!-- 브레드크럼 -->
+        <div class="breadcrumb">
+            <a href="/">▲ HOME</a> &gt;
+            <a th:href="@{/boardFaq}">게시판</a> &gt;
+            <span>FAQ</span>
+        </div>
+
+        <!-- 검색 요약 -->
+        <div class="search-summary">
+            <div class="search-summary-title">검색조건</div>
+            <div class="search-summary-text">
+                <th:block th:if="${category != null and category != 'all'}">
+                    카테고리 <strong th:text="${category}">카테고리</strong> |
+                </th:block>
+                <th:block th:unless="${category != null and category != 'all'}">
+                    카테고리 <strong>전체</strong> |
+                </th:block>
+                총 게시글 <strong th:text="${totalCount} + '건'">0건</strong>
+            </div>
+        </div>
+
+        <!-- 안내 문구 -->
+        <div class="note">
+            • 제목을 클릭하면 FAQ 상세 페이지로 이동합니다.
+        </div>
+
+        <!-- 상단 액션 버튼 (항상 보이게, 클릭 시에만 로그인 체크) -->
+        <div style="padding: 10px 25px 0 25px; text-align: right;">
+            <th:block th:if="${session.isLogin}">
+                <button type="button"
+                        onclick="location.href='/writeBoard'"
+                        style="padding: 8px 16px; border-radius: 4px; border: 1px solid var(--court-blue); background: var(--court-blue); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer;">
+                    게시글 작성하기
+                </button>
+            </th:block>
+            <th:block th:unless="${session.isLogin}">
+                <button type="button"
+                        onclick="alert('로그인 후 이용 가능한 서비스입니다. 로그인 페이지로 이동합니다.'); location.href='/memberLogin';"
+                        style="padding: 8px 16px; border-radius: 4px; border: 1px solid var(--court-blue); background: var(--court-blue); color: #fff; font-size: 13px; font-weight: 600; cursor: pointer;">
+                    게시글 작성하기
+                </button>
+            </th:block>
+        </div>
+
+        <!-- FAQ 테이블 -->
+        <div class="table-container">
+            <table class="faq-table">
+                <thead>
+                    <tr>
+                        <th style="width: 8%;">번호</th>
+                        <th style="width: 12%;">구분</th>
+                        <th style="width: 55%;">제목</th>
+                        <th style="width: 10%;">관련링크</th>
+                        <th style="width: 15%;">조회수</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <th:block th:if="${boardList != null and !boardList.isEmpty()}">
+                        <tr th:each="board, stat : ${boardList}">
+                            <td class="faq-number"
+                                th:text="${totalCount - (pageNum - 1) * pageSize - stat.index}">57</td>
+                            <td class="faq-category"
+                                th:text="${
+                                    board.category == 'real-estate' ? '부동산' :
+                                    (board.category == 'movable' ? '동산' :
+                                    (board.category == 'site' ? '사이트' : '기타'))
+                                }">기타</td>
+                            <td class="faq-title">
+                                <a th:href="@{/boardDetail(no=${board.no})}"
+                                   th:text="${board.title}">제목</a>
+                            </td>
+                            <td class="faq-link">
+                                <span th:if="${board.relatedLink != null and board.relatedLink != ''}">
+                                    <a th:href="${board.relatedLink}" target="_blank">링크</a>
+                                </span>
+                                <span th:if="${board.relatedLink == null or board.relatedLink == ''}">-</span>
+                            </td>
+                            <td class="faq-views" th:text="${board.views != null ? board.views : 0}">0</td>
+                        </tr>
+                    </th:block>
+                    <tr th:if="${boardList == null or boardList.isEmpty()}">
+                        <td colspan="5" style="text-align: center; padding: 60px; color: var(--text-gray);">
+                            등록된 게시글이 없습니다.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 페이지네이션 -->
+        <div class="pagination-wrapper">
+            <div class="pagination">
+                <th:block th:if="${pageNum > 1}">
+                    <a th:href="@{/boardFaq(pageNum=1, keyword=${keyword}, category=${category})}">&lt;&lt;</a>
+                    <a th:href="@{/boardFaq(pageNum=${pageNum - 1}, keyword=${keyword}, category=${category})}">&lt;</a>
+                </th:block>
+
+                <th:block th:if="${pageCount != null and startPage != null and endPage != null}">
+                    <th:block th:each="i : ${#numbers.sequence(startPage, endPage)}">
+                        <a th:href="@{/boardFaq(pageNum=${i}, keyword=${keyword}, category=${category})}"
+                           th:class="${i == pageNum ? 'current' : ''}"
+                           th:text="${i}">1</a>
+                    </th:block>
+                </th:block>
+
+                <th:block th:if="${pageNum != null and pageCount != null and pageNum < pageCount}">
+                    <a th:href="@{/boardFaq(pageNum=${pageNum + 1}, keyword=${keyword}, category=${category})}">&gt;</a>
+                    <a th:href="@{/boardFaq(pageNum=${pageCount}, keyword=${keyword}, category=${category})}">&gt;&gt;</a>
+                </th:block>
+            </div>
+
+            <div class="page-size-selector">
+                <label for="pageSize">페이지당</label>
+                <select id="pageSize"
+                        th:attr="onchange=|location.href='@{/boardFaq(pageNum=1, keyword=${keyword}, category=${category})}' + '&pageSize=' + this.value|">
+                    <option value="20" th:selected="${pageSize == 20}">20</option>
+                    <option value="50" th:selected="${pageSize == 50}">50</option>
+                    <option value="100" th:selected="${pageSize == 100}">100</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- 선택한 게시글 상세 보기 -->
+        <div class="detail-wrapper" th:if="${board != null}">
+            <h2 class="detail-title" th:text="${board.title}">게시글 제목</h2>
+            <div class="detail-meta">
+                <span th:text="'작성자: ' + ${board.id}">작성자</span>
+                <span th:text="' | 등록일: ' + ${#dates.format(board.regDate, 'yyyy.MM.dd HH:mm')}"
+                      th:if="${board.regDate != null}"> | 등록일</span>
+                <span th:text="' | 조회수: ' + (${board.views} != null ? ${board.views} : 0)"> | 조회수</span>
+            </div>
+            <div class="detail-content" th:text="${board.content}">내용</div>
+
+            <!-- 댓글 목록 -->
+            <div class="reply-section" th:if="${replyList != null and !replyList.isEmpty()}">
+                <div class="reply-title">댓글</div>
+                <div th:each="reply : ${replyList}" class="reply-item">
+                    <div class="reply-meta">
+                        <span th:text="${reply.id}">사용자</span>
+                        <span th:if="${reply.regDate != null}"
+                              th:text="' | ' + ${#dates.format(reply.regDate, 'yyyy.MM.dd HH:mm')}"> | 날짜</span>
+                    </div>
+                    <div class="reply-content" th:text="${reply.content}">댓글 내용</div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- =================== 푸터 =================== -->
+<div th:replace="~{layout/footer :: footer}"></div>
+
+</body>
+</html>

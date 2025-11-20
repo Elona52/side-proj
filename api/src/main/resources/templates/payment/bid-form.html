@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>입찰서 작성 - AuctionHub</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/auction.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .bid-form-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+            min-height: 100vh;
+        }
+        
+        .bid-form-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 0;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 30px;
+        }
+        
+        .bid-form-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            margin: 0;
+        }
+        
+        .form-section {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #dc3545;
+        }
+        
+        .item-info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        .item-info-table tr {
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .item-info-table td {
+            padding: 12px 0;
+            font-size: 14px;
+        }
+        
+        .item-info-label {
+            width: 150px;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .item-info-value {
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .item-info-value.highlight {
+            color: #dc3545;
+            font-size: 16px;
+        }
+        
+        .bid-method-selector {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .bid-method-btn {
+            flex: 1;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .bid-method-btn:hover {
+            border-color: #007bff;
+            background: #f8f9ff;
+        }
+        
+        .bid-method-btn.selected {
+            border-color: #007bff;
+            background: #e7f3ff;
+        }
+        
+        .bid-method-btn .method-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .bid-method-btn.selected .method-title {
+            color: #007bff;
+        }
+        
+        .bid-method-btn .method-desc {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .bid-amount-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .bid-amount-btn {
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .bid-amount-btn:hover {
+            border-color: #007bff;
+            background: #f8f9ff;
+        }
+        
+        .bid-amount-btn.selected {
+            border-color: #007bff;
+            background: #e7f3ff;
+            color: #007bff;
+        }
+        
+        .bid-amount-input-section {
+            margin-top: 20px;
+        }
+        
+        .bid-amount-input-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+        
+        .bid-amount-input-group label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .bid-amount-input-group input {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .bid-amount-input-group input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        
+        .deposit-amount-display {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #007bff;
+        }
+        
+        .payment-method-selector {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .payment-method-btn {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .payment-method-btn:hover {
+            border-color: #007bff;
+        }
+        
+        .payment-method-btn.selected {
+            border-color: #007bff;
+            background: #e7f3ff;
+            color: #007bff;
+        }
+        
+        .refund-account-form {
+            margin-top: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px solid #e0e0e0;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: #fff;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-primary {
+            background: #dc3545;
+            color: #fff;
+        }
+        
+        .btn-primary:hover {
+            background: #c82333;
+        }
+        
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div th:replace="~{layout/header :: header}"></div>
+    
+    <div class="bid-form-container">
+        <div class="bid-form-header">
+            <div>
+                <h1>입찰서 작성</h1>
+                <div style="font-size: 14px; color: #666; margin-top: 5px;">물건 정보를 확인하고 입찰 정보를 입력해주세요</div>
+            </div>
+        </div>
+        
+        <!-- 에러 메시지 -->
+        <div th:if="${error != null}" style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+            <strong th:text="${error}">에러 메시지</strong>
+            <div th:if="${existingPaymentId != null}" style="margin-top: 10px;">
+                <a th:href="@{/payment/detail/{id}(id=${existingPaymentId})}" 
+                   style="color: #721c24; text-decoration: underline;">
+                    기존 입찰서 보기
+                </a>
+            </div>
+        </div>
+        
+        <!-- 물건 입찰 정보 -->
+        <div class="form-section" th:if="${error == null}">
+            <h2 class="section-title">물건 입찰 정보</h2>
+            <table class="item-info-table" th:if="${auction != null or kamcoItem != null}">
+                <tr>
+                    <td class="item-info-label">물건명</td>
+                    <td class="item-info-value" th:text="${kamcoItem != null ? (kamcoItem.cltrNm != null ? kamcoItem.cltrNm : kamcoItem.goodsNm) : (auction != null ? auction.name : '-')}">물건명</td>
+                </tr>
+                <tr>
+                    <td class="item-info-label">물건관리번호</td>
+                    <td class="item-info-value" th:text="${kamcoItem != null ? kamcoItem.cltrNo : (auction != null ? auction.cltrNo : '-')}">-</td>
+                </tr>
+                <tr>
+                    <td class="item-info-label">입찰방식</td>
+                    <td class="item-info-value" th:text="${kamcoItem != null ? (kamcoItem.bidMtdNm != null ? kamcoItem.bidMtdNm : '일반경쟁(최고가방식)/총액') : (auction != null ? (auction.bidMethod != null ? auction.bidMethod : '일반경쟁(최고가방식)/총액') : '-')}">일반경쟁(최고가방식)/총액</td>
+                </tr>
+                <tr>
+                    <td class="item-info-label">최저입찰금액</td>
+                    <td class="item-info-value highlight" th:text="${kamcoItem != null and kamcoItem.minBidPrc != null and kamcoItem.minBidPrc > 0 ? (#numbers.formatInteger(kamcoItem.minBidPrc, 3, 'COMMA') + '원') : (auction != null ? (#numbers.formatInteger(auction.startPrice, 3, 'COMMA') + '원') : '-')}">60,000,000원</td>
+                </tr>
+                <tr>
+                    <td class="item-info-label">입찰기간</td>
+                    <td class="item-info-value">
+                        <span th:if="${kamcoItem != null and kamcoItem.pbctBegnDtm != null and kamcoItem.pbctClsDtm != null}">
+                            <span th:text="${kamcoItem.pbctBegnDtm.length() >= 14 ? (kamcoItem.pbctBegnDtm.substring(0,4) + '-' + kamcoItem.pbctBegnDtm.substring(4,6) + '-' + kamcoItem.pbctBegnDtm.substring(6,8) + ' ' + kamcoItem.pbctBegnDtm.substring(8,10) + ':' + kamcoItem.pbctBegnDtm.substring(10,12)) : kamcoItem.pbctBegnDtm}">시작일시</span>
+                            ~ 
+                            <span th:text="${kamcoItem.pbctClsDtm.length() >= 14 ? (kamcoItem.pbctClsDtm.substring(0,4) + '-' + kamcoItem.pbctClsDtm.substring(4,6) + '-' + kamcoItem.pbctClsDtm.substring(6,8) + ' ' + kamcoItem.pbctClsDtm.substring(8,10) + ':' + kamcoItem.pbctClsDtm.substring(10,12)) : kamcoItem.pbctClsDtm}">종료일시</span>
+                        </span>
+                        <span th:if="${kamcoItem == null and auction != null and auction.startDate != null and auction.endDate != null}">
+                            <span th:text="${#temporals.format(auction.startDate, 'yyyy-MM-dd HH:mm')}">시작일시</span>
+                            ~ 
+                            <span th:text="${#temporals.format(auction.endDate, 'yyyy-MM-dd HH:mm')}">종료일시</span>
+                        </span>
+                        <span th:if="${(kamcoItem == null or kamcoItem.pbctBegnDtm == null) and (auction == null or auction.startDate == null)}">-</span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        
+        <!-- 입찰방법 선택 -->
+        <div class="form-section">
+            <h2 class="section-title">입찰방법 선택</h2>
+            <div class="bid-method-selector">
+                <div class="bid-method-btn selected" data-method="self" onclick="selectBidMethod('self')">
+                    <div class="method-title">본인입찰</div>
+                    <div class="method-desc">본인 명의로 입찰합니다</div>
+                </div>
+                <div class="bid-method-btn" data-method="proxy" onclick="selectBidMethod('proxy')">
+                    <div class="method-title">대리입찰(서류제출)</div>
+                    <div class="method-desc">대리인 명의로 입찰합니다</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 입찰금액 입력 -->
+        <div class="form-section">
+            <h2 class="section-title">입찰금액 입력</h2>
+            <div class="bid-amount-input-section">
+                <div class="bid-amount-input-group">
+                    <label>최저입찰가</label>
+                    <input type="text" id="minBidAmount" 
+                           th:value="${kamcoItem != null and kamcoItem.minBidPrc != null and kamcoItem.minBidPrc > 0 ? #numbers.formatInteger(kamcoItem.minBidPrc, 3, 'COMMA') : (auction != null ? #numbers.formatInteger(auction.startPrice, 3, 'COMMA') : '0')}" 
+                           readonly style="background: #f8f9fa;">
+                </div>
+                
+                <div class="bid-amount-input-group">
+                    <label>입찰금액</label>
+                    <input type="text" id="bidAmount" placeholder="입찰금액을 직접 입력하세요" oninput="formatNumber(this); calculateDeposit();">
+                    <div style="font-size: 12px; color: #666; margin-top: 5px;">최저입찰가 이상 입력하세요</div>
+                </div>
+                
+                <div class="bid-amount-input-group">
+                    <label>보증금액 (자동계산)</label>
+                    <div class="deposit-amount-display" id="depositAmount">0원</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 5px;">입찰보증금율: 5%</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 보증금액 납부방식 -->
+        <div class="form-section">
+            <h2 class="section-title">보증금액 납부방식</h2>
+            <div class="payment-method-selector">
+                <div class="payment-method-btn selected" data-method="cash" onclick="selectPaymentMethod('cash')">
+                    현금
+                </div>
+                <div class="payment-method-btn" data-method="card" onclick="selectPaymentMethod('card')">
+                    카드
+                </div>
+            </div>
+        </div>
+        
+        <!-- 환불계좌 입력 -->
+        <div class="form-section">
+            <h2 class="section-title">환불계좌</h2>
+            <div class="refund-account-form">
+                <div class="form-group">
+                    <label>은행</label>
+                    <select id="refundBank">
+                        <option value="">은행 선택</option>
+                        <option value="shinhan">신한은행</option>
+                        <option value="busan">부산은행</option>
+                        <option value="woori">우리은행</option>
+                        <option value="ibk">기업은행</option>
+                        <option value="hana">하나은행</option>
+                        <option value="kb">국민은행</option>
+                        <option value="nh">농협은행</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>계좌번호</label>
+                    <input type="text" id="refundAccountNumber" placeholder="계좌번호를 입력하세요" oninput="formatAccountNumber(this);">
+                </div>
+                <div class="form-group">
+                    <label>예금주</label>
+                    <input type="text" id="refundAccountHolder" placeholder="예금주명을 입력하세요">
+                </div>
+                <div style="font-size: 12px; color: #666; margin-top: 10px;">
+                    ※ 환불계좌는 타인계좌도 가능합니다
+                </div>
+            </div>
+        </div>
+        
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="history.back()">이전</button>
+            <button type="button" class="btn btn-primary" id="submitBtn" onclick="submitBidForm()" disabled>입찰서 제출</button>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <div th:replace="~{layout/footer :: footer}"></div>
+    
+    <!-- Hidden inputs for item identification -->
+    <input type="hidden" id="hiddenAuctionNo" th:value="${auction != null ? auction.no : ''}">
+    <input type="hidden" id="hiddenItemId" th:value="${itemId != null ? itemId : (kamcoItem != null and kamcoItem.id != null ? kamcoItem.id : '')}">
+    <input type="hidden" id="hiddenCltrNo" th:value="${cltrNo != null ? cltrNo : (auction != null and auction.cltrNo != null ? auction.cltrNo : (kamcoItem != null and kamcoItem.cltrNo != null ? kamcoItem.cltrNo : ''))}">
+    <input type="hidden" id="hiddenItemName" th:value="${kamcoItem != null ? (kamcoItem.cltrNm != null ? kamcoItem.cltrNm : kamcoItem.goodsNm) : (auction != null ? auction.name : '')}">
+    
+    <script>
+        let selectedBidMethod = 'self';
+        let selectedPaymentMethod = 'cash';
+        const depositRate = 5; // 5%
+        const minBidAmount = /*[[${kamcoItem != null and kamcoItem.minBidPrc != null and kamcoItem.minBidPrc > 0 ? kamcoItem.minBidPrc : (auction != null ? auction.startPrice : 0)}]]*/ 0;
+        
+        function selectBidMethod(method) {
+            selectedBidMethod = method;
+            document.querySelectorAll('.bid-method-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            document.querySelector(`[data-method="${method}"]`).classList.add('selected');
+            checkSubmitButton();
+        }
+        
+        function selectPaymentMethod(method) {
+            selectedPaymentMethod = method;
+            document.querySelectorAll('.payment-method-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            document.querySelector(`[data-method="${method}"]`).classList.add('selected');
+            checkSubmitButton();
+        }
+        
+        function formatNumber(input) {
+            let value = input.value.replace(/[^0-9]/g, '');
+            if (value) {
+                value = parseInt(value).toLocaleString('ko-KR');
+            }
+            input.value = value;
+        }
+        
+        function formatAccountNumber(input) {
+            let value = input.value.replace(/[^0-9-]/g, '');
+            input.value = value;
+        }
+        
+        function calculateDeposit() {
+            const bidAmountInput = document.getElementById('bidAmount');
+            const depositAmountDiv = document.getElementById('depositAmount');
+            
+            let bidAmount = bidAmountInput.value.replace(/[^0-9]/g, '');
+            if (!bidAmount) {
+                depositAmountDiv.textContent = '0원';
+                checkSubmitButton();
+                return;
+            }
+            
+            bidAmount = parseInt(bidAmount);
+            const depositAmount = Math.floor(bidAmount * depositRate / 100);
+            
+            depositAmountDiv.textContent = depositAmount.toLocaleString('ko-KR') + '원';
+            
+            checkSubmitButton();
+        }
+        
+        function checkSubmitButton() {
+            const bidAmount = document.getElementById('bidAmount').value.replace(/[^0-9]/g, '');
+            const refundBank = document.getElementById('refundBank').value;
+            const refundAccountNumber = document.getElementById('refundAccountNumber').value;
+            const refundAccountHolder = document.getElementById('refundAccountHolder').value;
+            const submitBtn = document.getElementById('submitBtn');
+            
+            if (bidAmount && parseInt(bidAmount) >= minBidAmount && refundBank && refundAccountNumber && refundAccountHolder) {
+                submitBtn.disabled = false;
+            } else {
+                submitBtn.disabled = true;
+            }
+        }
+        
+        function submitBidForm() {
+            const bidAmount = document.getElementById('bidAmount').value.replace(/[^0-9]/g, '');
+            const depositAmount = document.getElementById('depositAmount').textContent.replace(/[^0-9]/g, '');
+            const refundBank = document.getElementById('refundBank').value;
+            const refundAccountNumber = document.getElementById('refundAccountNumber').value;
+            const refundAccountHolder = document.getElementById('refundAccountHolder').value;
+            
+            if (!bidAmount || parseInt(bidAmount) < minBidAmount) {
+                alert('최저입찰가 이상의 금액을 입력해주세요.');
+                return;
+            }
+            
+            if (!refundBank || !refundAccountNumber || !refundAccountHolder) {
+                alert('환불계좌 정보를 모두 입력해주세요.');
+                return;
+            }
+            
+            // 입찰서 제출 API 호출
+            // Hidden input에서 값 가져오기
+            const auctionNoInput = document.getElementById('hiddenAuctionNo');
+            const itemIdInput = document.getElementById('hiddenItemId');
+            const cltrNoInput = document.getElementById('hiddenCltrNo');
+            const itemNameInput = document.getElementById('hiddenItemName');
+            
+            console.log('Hidden input 요소 확인:', {
+                auctionNoInput: auctionNoInput ? auctionNoInput.value : 'null',
+                itemIdInput: itemIdInput ? itemIdInput.value : 'null',
+                cltrNoInput: cltrNoInput ? cltrNoInput.value : 'null',
+                itemNameInput: itemNameInput ? itemNameInput.value : 'null'
+            });
+            
+            let auctionNo = null;
+            let itemId = null;
+            let cltrNo = null;
+            let itemName = '';
+            
+            if (auctionNoInput && auctionNoInput.value && auctionNoInput.value.trim() !== '') {
+                auctionNo = parseInt(auctionNoInput.value);
+            }
+            if (itemIdInput && itemIdInput.value && itemIdInput.value.trim() !== '') {
+                itemId = parseInt(itemIdInput.value);
+            }
+            if (cltrNoInput && cltrNoInput.value && cltrNoInput.value.trim() !== '') {
+                cltrNo = cltrNoInput.value.trim();
+            }
+            if (itemNameInput && itemNameInput.value) {
+                itemName = itemNameInput.value.trim();
+            }
+            
+            // URL 파라미터에서도 확인 (fallback)
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlAuctionNo = urlParams.get('auctionNo');
+            const urlItemId = urlParams.get('itemId');
+            const urlCltrNo = urlParams.get('cltrNo');
+            
+            if (!auctionNo && urlAuctionNo) {
+                auctionNo = parseInt(urlAuctionNo);
+            }
+            if (!itemId && urlItemId) {
+                itemId = parseInt(urlItemId);
+            }
+            if (!cltrNo && urlCltrNo) {
+                cltrNo = urlCltrNo;
+            }
+            
+            const finalAuctionNo = auctionNo;
+            const finalItemId = itemId;
+            const finalCltrNo = cltrNo;
+            
+            console.log('아이템 식별자 (최종):', {
+                auctionNo: finalAuctionNo,
+                itemId: finalItemId,
+                cltrNo: finalCltrNo,
+                itemName: itemName
+            });
+            
+            // 값이 하나도 없으면 오류
+            if (!finalAuctionNo && !finalItemId && !finalCltrNo) {
+                console.error('아이템 식별자가 없습니다!');
+                alert('물건 정보를 찾을 수 없습니다. 페이지를 새로고침하고 다시 시도해주세요.');
+                return;
+            }
+            
+            const requestData = {
+                amount: parseInt(depositAmount),
+                itemName: itemName,
+                bidAmount: parseInt(bidAmount),
+                depositAmount: parseInt(depositAmount),
+                bidMethod: selectedBidMethod,
+                paymentMethod: selectedPaymentMethod,
+                refundBank: refundBank,
+                refundAccountNumber: refundAccountNumber,
+                refundAccountHolder: refundAccountHolder
+            };
+            
+            if (finalAuctionNo) requestData.auctionNo = finalAuctionNo;
+            if (finalItemId) requestData.itemId = finalItemId;
+            if (finalCltrNo) requestData.cltrNo = finalCltrNo;
+            
+            // 입찰서 제출 API 호출
+            console.log('입찰서 제출 요청 데이터:', requestData);
+            
+            $.ajax({
+                url: '/payment/submit-bid',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(requestData),
+                success: function(response) {
+                    console.log('입찰서 제출 응답:', response);
+                    
+                    if (response && response.success) {
+                        if (!response.paymentId) {
+                            console.error('입찰서 제출 응답에 paymentId가 없습니다:', response);
+                            alert('입찰서 제출에 실패했습니다: paymentId가 없습니다.');
+                            return;
+                        }
+                        
+                        // 입찰서 제출 완료 페이지로 이동
+                        let successUrl = '/payment/bid-submitted?paymentId=' + response.paymentId;
+                        successUrl += '&bidAmount=' + bidAmount;
+                        successUrl += '&depositAmount=' + depositAmount;
+                        successUrl += '&bidMethod=' + encodeURIComponent(selectedBidMethod);
+                        successUrl += '&paymentMethod=' + encodeURIComponent(selectedPaymentMethod);
+                        successUrl += '&refundBank=' + encodeURIComponent(refundBank);
+                        successUrl += '&refundAccountNumber=' + encodeURIComponent(refundAccountNumber);
+                        successUrl += '&refundAccountHolder=' + encodeURIComponent(refundAccountHolder);
+                        
+                        console.log('입찰서 제출 완료 페이지로 이동:', successUrl);
+                        window.location.href = successUrl;
+                    } else {
+                        const errorMsg = response && response.message ? response.message : '알 수 없는 오류';
+                        console.error('입찰서 제출 실패:', errorMsg);
+                        
+                        // 이미 작성된 입찰서가 있는 경우
+                        if (errorMsg.includes('이미 입찰서가 작성되었습니다') && response.existingPaymentId) {
+                            if (confirm('이미 입찰서가 작성되었습니다.\n기존 입찰서를 보시겠습니까?')) {
+                                window.location.href = '/payment/detail/' + response.existingPaymentId;
+                            }
+                        } else {
+                            alert('입찰서 제출에 실패했습니다: ' + errorMsg);
+                        }
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('입찰서 제출 오류:', {
+                        status: status,
+                        error: error,
+                        responseText: xhr.responseText,
+                        responseJSON: xhr.responseJSON
+                    });
+                    
+                    let errorMessage = '입찰서 제출 중 오류가 발생했습니다.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    } else if (xhr.responseText) {
+                        try {
+                            const errorData = JSON.parse(xhr.responseText);
+                            if (errorData.message) {
+                                errorMessage = errorData.message;
+                            }
+                        } catch (e) {
+                            errorMessage = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+                        }
+                    }
+                    alert(errorMessage);
+                }
+            });
+        }
+        
+        // 환불계좌 입력 시 제출 버튼 활성화 체크
+        document.getElementById('refundBank').addEventListener('change', checkSubmitButton);
+        document.getElementById('refundAccountNumber').addEventListener('input', checkSubmitButton);
+        document.getElementById('refundAccountHolder').addEventListener('input', checkSubmitButton);
+    </script>
+</body>
+</html>

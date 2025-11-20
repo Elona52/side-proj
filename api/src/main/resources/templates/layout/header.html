@@ -1,0 +1,107 @@
+<header class="court-header" th:fragment="header" xmlns:th="http://www.thymeleaf.org">
+    <!-- Hidden Input -->
+    <input type="hidden" id="loginId" th:value="${session.loginId}">
+    <input type="hidden" id="isLogin" th:value="${session.isLogin != null ? 'true' : 'false'}">
+    <div class="court-header-top">
+        <div class="court-logo">
+            <h1>
+                <img src="/img/logo.gif" alt="경매정보 로고">
+            </h1>
+            <a th:href="@{/main}">한국자산관리공사</a>
+        </div>
+        <nav class="court-header-nav">
+            <th:block th:if="${session.isLogin == null}">
+                <a th:href="@{/memberLogin}">로그인</a>
+                <a th:href="@{/memberJoin}">회원가입</a>
+                <a href="#">아이디/비밀번호 찾기</a>
+            </th:block>
+            <th:block th:if="${session.isLogin != null}">
+                <a href="#"><span th:text="${session.loginId}">사용자</span>님</a>
+                <a th:href="@{/myFavorites}">즐겨찾기</a>
+                <a th:href="@{/payment/my-payments}">구매내역</a>
+                <a th:if="${session.type == 'admin'}" th:href="@{/adminMemberRegister}" class="admin-link">관리자</a>
+                <a th:href="@{/logout}">로그아웃</a>
+            </th:block>
+            <a th:href="@{/sitemap}">사이트맵</a>
+        </nav>
+    </div>
+    <div class="court-header-main">
+        <nav class="court-main-nav">
+            <div class="main-nav-links">
+                <a th:href="@{/new-items}">경매공고</a>
+                <a th:href="@{/auctionList}">경매물건</a>
+                <a href="#">매각통계</a>
+                <a th:href="@{/boardList}">게시판</a>
+                <a href="/information">이용안내</a>
+                <a id="myAuctionBtn" href="#" onclick="checkLoginAndNavigate('/myFavorites'); return false;" style="display: inline-block !important; visibility: visible !important; opacity: 1 !important; color: #fff !important; font-size: 17px !important; font-weight: 700 !important; text-decoration: none !important;">나의경매</a>
+            </div>
+            <div class="nav-search-wrapper">
+                <i class="fas fa-search nav-search-icon"></i>
+            </div>
+        </nav>
+    </div>
+    <script>
+        function checkLoginAndNavigate(url) {
+            const isLogin = document.getElementById('isLogin');
+            if (isLogin && isLogin.value === 'true') {
+                window.location.href = url;
+            } else {
+                alert('로그인 후 이용가능합니다');
+            }
+        }
+        // 페이지 로드 시 나의경매 버튼이 항상 보이도록 강제
+        (function() {
+            function showMyAuctionButton() {
+                // ID로 찾기
+                const myAuctionBtn = document.getElementById('myAuctionBtn');
+                if (myAuctionBtn) {
+                    myAuctionBtn.style.display = 'inline-block';
+                    myAuctionBtn.style.visibility = 'visible';
+                    myAuctionBtn.style.opacity = '1';
+                    myAuctionBtn.style.position = 'relative';
+                    myAuctionBtn.style.zIndex = '10';
+                    myAuctionBtn.style.color = '#fff';
+                    myAuctionBtn.style.fontSize = '17px';
+                    myAuctionBtn.style.fontWeight = '700';
+                    myAuctionBtn.style.textDecoration = 'none';
+                }
+                // onclick 속성으로도 찾기 (백업)
+                const myAuctionLinks = document.querySelectorAll('a[onclick*="checkLoginAndNavigate"]');
+                myAuctionLinks.forEach(function(link) {
+                    link.style.display = 'inline-block';
+                    link.style.visibility = 'visible';
+                    link.style.opacity = '1';
+                    link.style.position = 'relative';
+                    link.style.zIndex = '10';
+                    link.style.color = '#fff';
+                    link.style.fontSize = '17px';
+                    link.style.fontWeight = '700';
+                    link.style.textDecoration = 'none';
+                });
+            }
+            // 즉시 실행
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', showMyAuctionButton);
+            } else {
+                showMyAuctionButton();
+            }
+            // 추가로 약간의 지연 후에도 실행 (다른 스크립트가 숨길 수 있으므로)
+            setTimeout(showMyAuctionButton, 100);
+            setTimeout(showMyAuctionButton, 500);
+            setTimeout(showMyAuctionButton, 1000);
+            // MutationObserver로 DOM 변경 감지
+            if (typeof MutationObserver !== 'undefined') {
+                const observer = new MutationObserver(function(mutations) {
+                    showMyAuctionButton();
+                });
+                observer.observe(document.body, {
+                    childList: true,
+                    subtree: true,
+                    attributes: true,
+                    attributeFilter: ['style', 'class']
+                });
+            }
+        })();
+    </script>
+</header>
+

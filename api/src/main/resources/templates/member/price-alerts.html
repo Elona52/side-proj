@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>가격 알림 - 나의경매</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Court Auction CSS -->
+    <link rel="stylesheet" th:href="@{/css/auction.css}">
+    <link rel="stylesheet" th:href="@{/css/kamco.css}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <style>
+        :root {
+            --court-blue: #004098;
+            --court-navy: #002855;
+            --border-gray: #ddd;
+            --bg-light: #f5f5f5;
+            --text-dark: #333;
+            --text-gray: #777;
+        }
+
+        /* * { box-sizing: border-box; } - auction.css에서 관리 */
+        /* html, body 스타일은 auction.css에서 관리 */
+
+        /* ========== 메인 레이아웃 ========== */
+        .board-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            display: flex;
+            gap: 30px;
+        }
+
+        .side-menu {
+            width: 250px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 0;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .side-menu-header {
+            background: var(--court-blue);
+            color: #fff;
+            padding: 15px 20px;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .side-menu-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .side-menu-item {
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .side-menu-item a {
+            display: block;
+            padding: 14px 20px;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .side-menu-item a:hover {
+            background: #f8f9fa;
+            color: var(--court-blue);
+            padding-left: 25px;
+        }
+
+        .side-menu-item.active a {
+            background: var(--court-blue);
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .main-content {
+            flex: 1;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            min-width: 0;
+        }
+
+        .breadcrumb {
+            padding: 15px 25px;
+            border-bottom: 1px solid var(--border-gray);
+            font-size: 13px;
+            color: var(--text-gray);
+        }
+
+        .breadcrumb a {
+            color: var(--text-gray);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            color: var(--court-blue);
+        }
+
+        .search-summary {
+            padding: 20px 25px;
+            background: #f8f9fa;
+            border-bottom: 1px solid var(--border-gray);
+        }
+
+        .search-summary-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+
+        .search-summary-text {
+            font-size: 14px;
+            color: var(--text-gray);
+        }
+
+        .search-summary-text strong {
+            color: var(--court-blue);
+            font-weight: 700;
+        }
+
+        .note {
+            padding: 12px 25px;
+            background: #fffbf0;
+            border-bottom: 1px solid #ffe082;
+            font-size: 13px;
+            color: #795548;
+        }
+
+        /* ========== 가격 알림 테이블 ========== */
+        .table-container {
+            padding: 25px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        .alert-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            font-size: 13px !important;
+            table-layout: fixed !important;
+        }
+
+        .alert-table thead {
+            background: #f8f9fa;
+            border-top: 2px solid var(--court-blue);
+            border-bottom: 1px solid var(--border-gray);
+        }
+
+        .alert-table th {
+            padding: 12px 10px;
+            text-align: center;
+            font-weight: 700;
+            color: var(--text-dark);
+            font-size: 14px;
+        }
+
+        .alert-table tbody tr {
+            height: 60px;
+        }
+
+        .alert-table tbody td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+        }
+
+        .alert-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .alert-number {
+            text-align: center;
+            color: var(--text-gray);
+            font-weight: 600;
+        }
+
+        .alert-item-name {
+            text-align: left;
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+
+        .alert-price {
+            text-align: right;
+            font-weight: 700;
+        }
+
+        .price-change {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .price-down {
+            color: #dc3545;
+        }
+
+        .price-up {
+            color: #28a745;
+        }
+
+        .price-same {
+            color: var(--text-gray);
+        }
+
+        .alert-date {
+            text-align: center;
+            color: var(--text-gray);
+            font-size: 12px;
+        }
+
+        .alert-status {
+            text-align: center;
+        }
+
+        .status-sent {
+            color: #28a745;
+            font-weight: 700;
+        }
+
+        .status-pending {
+            color: var(--text-gray);
+        }
+
+        .no-alerts {
+            text-align: center;
+            padding: 80px 20px;
+            background: #fff;
+        }
+
+        .no-alerts-icon {
+            font-size: 72px;
+            margin-bottom: 20px;
+            color: #ddd;
+        }
+
+        .no-alerts h3 {
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .no-alerts p {
+            color: #999;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .board-container {
+                flex-direction: column;
+            }
+            .side-menu {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+        }
+    </style>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+<!-- =================== 헤더 =================== -->
+<div th:replace="~{layout/header :: header}"></div>
+
+<!-- 메인 컨텐츠 -->
+<main class="board-container">
+    <!-- 좌측 네비 -->
+    <aside class="side-menu">
+        <div class="side-menu-header">• 나의경매</div>
+        <ul class="side-menu-list">
+            <li class="side-menu-item">
+                <a th:href="@{/myFavorites}">
+                    <i class="fas fa-star"></i> 즐겨찾기
+                </a>
+            </li>
+            <li class="side-menu-item">
+                <a th:href="@{/payment/my-payments}">
+                    <i class="fas fa-shopping-cart"></i> 구매내역
+                </a>
+            </li>
+            <li class="side-menu-item active">
+                <a th:href="@{/price-alerts}">
+                    <i class="fas fa-bell"></i> 가격 알림
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- 오른쪽 메인 -->
+    <section class="main-content">
+        <!-- 브레드크럼 -->
+        <div class="breadcrumb">
+            <a th:href="@{/main}">▲ HOME</a> &gt;
+            <a th:href="@{/price-alerts}">나의경매</a> &gt;
+            <span>가격 알림</span>
+        </div>
+
+        <!-- 검색 요약 -->
+        <div class="search-summary">
+            <div class="search-summary-title">가격 알림 히스토리</div>
+            <div class="search-summary-text">
+                총 알림 <strong id="alertsCount">0건</strong>
+            </div>
+        </div>
+
+        <!-- 안내 문구 -->
+        <div class="note">
+            • 즐겨찾기한 물건의 가격 변동 알림 내역을 확인할 수 있습니다.
+        </div>
+
+        <!-- 가격 알림 목록 -->
+        <div class="table-container">
+            <div id="alertsContainer">
+                <div class="loading" style="text-align: center; padding: 60px 20px;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 32px; color: var(--court-blue); margin-bottom: 15px;"></i>
+                    <p style="color: var(--text-gray);">가격 알림 목록을 불러오는 중...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- =================== 푸터 =================== -->
+<div th:replace="~{layout/footer :: footer}"></div>
+
+<!-- JavaScript -->
+<script>
+    function loadAlerts() {
+        console.log('=== 가격 알림 목록 로드 시작 ===');
+        
+        if (typeof jQuery === 'undefined') {
+            console.error('❌ jQuery가 없습니다.');
+            showNoAlerts('jQuery를 로드할 수 없습니다.');
+            return;
+        }
+        
+        const container = $('#alertsContainer');
+        if (!container || container.length === 0) {
+            console.error('❌ alertsContainer를 찾을 수 없습니다.');
+            return;
+        }
+        
+        $.ajax({
+            url: '/api/favorites/alerts/api',
+            method: 'GET',
+            timeout: 15000,
+            dataType: 'json',
+            success: function(response) {
+                console.log('✅ AJAX 성공 응답 받음:', response);
+                
+                try {
+                    if (!response) {
+                        console.error('❌ 응답이 null입니다.');
+                        showNoAlerts('서버 응답이 없습니다.');
+                        return;
+                    }
+                    
+                    if (response.success === true && response.alerts) {
+                        console.log('✅ 가격 알림 목록 발견:', response.alerts.length, '개');
+                        displayAlerts(response.alerts);
+                        $('#alertsCount').text(response.alerts.length + '건');
+                    } 
+                    else if (response.success === false) {
+                        console.warn('⚠️ 가격 알림 조회 실패:', response.message || '알 수 없는 오류');
+                        showNoAlerts(response.message || '가격 알림을 불러올 수 없습니다.');
+                    }
+                    else if (response.alerts && Array.isArray(response.alerts) && response.alerts.length === 0) {
+                        console.log('ℹ️ 가격 알림이 없습니다.');
+                        showNoAlerts();
+                    }
+                    else {
+                        console.error('❌ 예상치 못한 응답 구조:', response);
+                        showNoAlerts('응답 형식이 올바르지 않습니다.');
+                    }
+                } catch (e) {
+                    console.error('❌ 응답 처리 중 예외 발생:', e);
+                    showNoAlerts('데이터 처리 중 오류가 발생했습니다.');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('❌ AJAX 오류 발생:', status, error);
+                const container = $('#alertsContainer');
+                if (xhr.status === 401 || xhr.status === 403) {
+                    container.html('<div class="no-alerts"><h3>로그인이 필요합니다</h3><p><a href="/memberLogin">로그인하러 가기</a></p></div>');
+                } else {
+                    showNoAlerts('가격 알림을 불러오는 중 오류가 발생했습니다.');
+                }
+            }
+        });
+    }
+    
+    function displayAlerts(alerts) {
+        console.log('=== displayAlerts 호출 ===');
+        console.log('알림 개수:', alerts ? alerts.length : 0);
+        
+        if (typeof jQuery === 'undefined') {
+            console.error('❌ jQuery가 없습니다.');
+            return;
+        }
+        
+        const container = $('#alertsContainer');
+        if (!container || container.length === 0) {
+            console.error('❌ alertsContainer를 찾을 수 없습니다.');
+            return;
+        }
+        
+        if (!alerts || !Array.isArray(alerts) || alerts.length === 0) {
+            console.log('ℹ️ 가격 알림이 없습니다.');
+            showNoAlerts();
+            return;
+        }
+        
+        let html = '<table class="alert-table">';
+        html += '<thead>';
+        html += '<tr>';
+        html += '<th style="width: 8%;">번호</th>';
+        html += '<th style="width: 30%;">물건명</th>';
+        html += '<th style="width: 20%;">이전 가격</th>';
+        html += '<th style="width: 20%;">변동 가격</th>';
+        html += '<th style="width: 12%;">알림 상태</th>';
+        html += '<th style="width: 10%;">알림 일시</th>';
+        html += '</tr>';
+        html += '</thead>';
+        html += '<tbody>';
+        
+        alerts.forEach(function(alert, index) {
+            const previousPrice = alert.previousPrice || 0;
+            const newPrice = alert.newPrice || 0;
+            const priceDiff = newPrice - previousPrice;
+            const priceChangeClass = priceDiff < 0 ? 'price-down' : (priceDiff > 0 ? 'price-up' : 'price-same');
+            const priceChangeIcon = priceDiff < 0 ? '↓' : (priceDiff > 0 ? '↑' : '→');
+            const priceChangeText = priceDiff < 0 ? '하락' : (priceDiff > 0 ? '상승' : '동일');
+            
+            const sentDate = alert.sentDate ? new Date(alert.sentDate).toLocaleString('ko-KR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            }) : '-';
+            
+            html += '<tr>';
+            html += '<td class="alert-number">' + (alerts.length - index) + '</td>';
+            html += '<td class="alert-item-name">' + escapeHtml(alert.itemPlnmNo || '알 수 없음') + '</td>';
+            html += '<td class="alert-price">' + formatPrice(previousPrice) + '원</td>';
+            html += '<td class="alert-price">';
+            html += '<div class="price-change ' + priceChangeClass + '">';
+            html += '<span>' + priceChangeIcon + '</span>';
+            html += '<span>' + formatPrice(newPrice) + '원</span>';
+            html += '<span style="font-size: 11px;">(' + priceChangeText + ')</span>';
+            html += '</div>';
+            html += '</td>';
+            html += '<td class="alert-status">';
+            html += '<span class="' + (alert.alertSent ? 'status-sent' : 'status-pending') + '">';
+            html += (alert.alertSent ? '전송완료' : '대기중');
+            html += '</span>';
+            html += '</td>';
+            html += '<td class="alert-date">' + sentDate + '</td>';
+            html += '</tr>';
+        });
+        
+        html += '</tbody>';
+        html += '</table>';
+        
+        container.html(html);
+        console.log('✅ 가격 알림 표시 완료:', alerts.length, '개');
+    }
+    
+    function formatPrice(price) {
+        if (!price || price === 0) return '0';
+        return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+    
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    function showNoAlerts(message) {
+        const container = $('#alertsContainer');
+        if (!container || container.length === 0) {
+            console.error('alertsContainer를 찾을 수 없습니다.');
+            return;
+        }
+        
+        const displayMessage = message || '가격 알림 내역이 없습니다';
+        const html = '<div class="no-alerts">' +
+            '<div class="no-alerts-icon">🔔</div>' +
+            '<h3>' + displayMessage + '</h3>' +
+            (message ? '' : '<p>즐겨찾기한 물건의 가격이 변동되면 알림을 받을 수 있습니다.</p>') +
+            '</div>';
+        container.html(html);
+    }
+    
+    // DOM 로드 완료 후 초기화
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', loadAlerts);
+    } else {
+        if (typeof jQuery !== 'undefined') {
+            $(document).ready(loadAlerts);
+        } else {
+            setTimeout(loadAlerts, 500);
+        }
+    }
+</script>
+
+</body>
+</html>
+

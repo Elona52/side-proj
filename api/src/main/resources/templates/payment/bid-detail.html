@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>입찰 결과 상세 - AuctionHub</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/auction.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .bid-detail-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+            min-height: 100vh;
+        }
+        
+        .bid-detail-header {
+            padding: 20px 0;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 30px;
+        }
+        
+        .bid-detail-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #dc3545;
+            margin: 0;
+        }
+        
+        .item-info-section {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .item-type {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .item-location {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .item-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .tag {
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .tag-blue {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .tag-green {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+        
+        .tag-red {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+        
+        .tag-brown {
+            background: #efebe9;
+            color: #5d4037;
+        }
+        
+        .payment-status-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .status-btn {
+            padding: 8px 16px;
+            background: #6c757d;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .status-btn.paid {
+            background: #28a745;
+        }
+        
+        .view-detail-btn {
+            padding: 8px 16px;
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .view-detail-btn:hover {
+            background: #0056b3;
+            color: #fff;
+            text-decoration: none;
+        }
+        
+        .bid-result-box {
+            background: #fff;
+            border: 2px solid #dc3545;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .bid-result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .bid-result-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .bid-result-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #007bff;
+        }
+        
+        .bid-amount-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+        }
+        
+        .bid-info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .bid-info-table tr {
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .bid-info-table td {
+            padding: 12px 0;
+            font-size: 14px;
+        }
+        
+        .bid-info-label {
+            width: 200px;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .bid-info-value {
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .bid-amount-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+            text-align: center;
+        }
+        
+        .bid-amount-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .bid-amount-display {
+            font-size: 32px;
+            font-weight: 700;
+            color: #dc3545;
+        }
+        
+        .close-button {
+            display: block;
+            width: 100%;
+            max-width: 200px;
+            margin: 40px auto 0;
+            padding: 15px 30px;
+            background: #6c757d;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .close-button:hover {
+            background: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div th:replace="~{layout/header :: header}"></div>
+    
+    <div class="bid-detail-container">
+        <div class="bid-detail-header">
+            <h1>입찰내역관리</h1>
+        </div>
+        
+        <!-- 물건 정보 -->
+        <div class="item-info-section">
+            <div class="item-type" th:text="${auction != null ? auction.content : (payment != null ? payment.itemName : '-')}">[상가용및업무용건물/판매시설]</div>
+            <div class="item-location" th:text="${auction != null ? auction.name : (payment != null ? payment.itemName : '-')}">(드라이브인_부산광역시 남구 문현동 1229-1 110호 판매시설)</div>
+            
+            <div class="item-tags">
+                <span class="tag tag-blue">일반공고</span>
+                <span class="tag tag-green">임대(대부)</span>
+                <span class="tag tag-red">인터넷</span>
+                <span class="tag tag-green">일반경쟁</span>
+                <span class="tag tag-green">최고가방식</span>
+                <span class="tag tag-brown">총액</span>
+            </div>
+            
+            <div class="payment-status-buttons">
+                <button class="status-btn" th:class="${payment != null and payment.status == 'paid' ? 'status-btn paid' : 'status-btn'}"
+                        th:text="${payment != null and payment.status == 'paid' ? '입찰보증금 완납' : '입찰보증금 미납'}">입찰보증금 완납</button>
+                <button class="status-btn paid">참가수수료 완납</button>
+                <a th:href="@{/auction/api-detail(cltrNo=${payment != null ? payment.cltrNo : (auction != null ? auction.cltrNo : '')})}" 
+                   class="view-detail-btn">물건상세보기</a>
+            </div>
+        </div>
+        
+        <!-- 입찰 결과 -->
+        <div class="bid-result-box">
+            <div class="bid-result-header">
+                <div>
+                    <div class="bid-result-title">나의입찰결과</div>
+                    <div class="bid-result-value" th:text="${payment != null and payment.status == 'paid' ? '낙찰' : '입찰중'}">낙찰</div>
+                </div>
+                <div>
+                    <div class="bid-result-title">낙찰금액</div>
+                    <div class="bid-amount-value" th:text="${payment != null and payment.amount != null ? (#numbers.formatInteger(payment.amount, 3, 'COMMA') + ' 원') : '-'}">218,000,000 원</div>
+                </div>
+            </div>
+            
+            <h3 style="font-size: 18px; font-weight: 700; color: #333; margin-bottom: 20px;">입찰서제출정보</h3>
+            <table class="bid-info-table">
+                <tr>
+                    <td class="bid-info-label">물건관리번호</td>
+                    <td class="bid-info-value" th:text="${payment != null ? payment.cltrNo : (auction != null ? auction.cltrNo : '-')}">2020-1100-003533</td>
+                </tr>
+                <tr>
+                    <td class="bid-info-label">회차/차수</td>
+                    <td class="bid-info-value">001/001</td>
+                </tr>
+                <tr>
+                    <td class="bid-info-label">처분방식</td>
+                    <td class="bid-info-value">임대(대부)</td>
+                </tr>
+                <tr>
+                    <td class="bid-info-label">입찰방식</td>
+                    <td class="bid-info-value">일반경쟁(최고가방식)</td>
+                </tr>
+                <tr>
+                    <td class="bid-info-label">진행상태</td>
+                    <td class="bid-info-value" th:text="${payment != null and payment.status == 'paid' ? '개찰완료' : '입찰진행중'}">개찰완료</td>
+                </tr>
+                <tr>
+                    <td class="bid-info-label">개찰결과</td>
+                    <td class="bid-info-value" th:text="${payment != null and payment.status == 'paid' ? '낙찰' : '진행중'}">낙찰</td>
+                </tr>
+                <tr>
+                    <td class="bid-info-label">집행완료일시</td>
+                    <td class="bid-info-value" th:text="${payment != null and payment.paidAt != null ? #temporals.format(payment.paidAt, 'yyyy-MM-dd HH:mm') : '-'}">2020-11-09 16:48</td>
+                </tr>
+                <tr>
+                    <td class="bid-info-label">입찰마감일시</td>
+                    <td class="bid-info-value" th:text="${payment != null and payment.deadlineDate != null ? #temporals.format(payment.deadlineDate, 'yyyy-MM-dd HH:mm') : '-'}">2020-11-09 16:48</td>
+                </tr>
+                <tr>
+                    <td class="bid-info-label">입찰서제출일시</td>
+                    <td class="bid-info-value" th:text="${payment != null and payment.createdDate != null ? #temporals.format(payment.createdDate, 'yyyy-MM-dd HH:mm:ss') : '-'}">2020-11-09 16:47:01</td>
+                </tr>
+            </table>
+            
+            <div class="bid-amount-section">
+                <div class="bid-amount-label">입찰금액</div>
+                <div class="bid-amount-display" th:text="${payment != null and payment.amount != null ? (#numbers.formatInteger(payment.amount, 3, 'COMMA') + '원') : '-'}">218,000,000원</div>
+            </div>
+        </div>
+        
+        <button class="close-button" onclick="window.close() || history.back()">닫기</button>
+    </div>
+    
+    <!-- Footer -->
+    <div th:replace="~{layout/footer :: footer}"></div>
+</body>
+</html>
+

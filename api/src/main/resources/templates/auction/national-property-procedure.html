@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>국유재산 낙찰 후 절차 안내 - 경매정보</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/auction.css}">
+    <link rel="stylesheet" th:href="@{/css/kamco.css}">
+    
+    <style>
+        :root {
+            --court-blue: #004098;
+            --border-gray: #ddd;
+            --bg-light: #f5f5f5;
+            --text-dark: #222;
+            --text-gray: #777;
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            font-family: 'Nanum Gothic', 'Malgun Gothic', sans-serif;
+            background: #f5f5f5;
+        }
+
+        /* 헤더 */
+
+        /* 메인 컨텐츠 */
+        .procedure-container {
+            max-width: 1200px;
+            margin: 30px auto 60px auto;
+            padding: 0 20px;
+        }
+
+        .breadcrumb {
+            font-size: 13px;
+            color: var(--text-gray);
+            margin-bottom: 20px;
+        }
+
+        .breadcrumb a {
+            color: var(--text-gray);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover { color: var(--court-blue); }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 800;
+            margin: 0 0 30px 0;
+            color: var(--text-dark);
+            border-bottom: 3px solid var(--court-blue);
+            padding-bottom: 15px;
+        }
+
+        /* 카테고리 탭 */
+        .category-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--border-gray);
+        }
+
+        .category-tab {
+            padding: 15px 30px;
+            background: #fff;
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-gray);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .category-tab.active {
+            color: var(--court-blue);
+            border-bottom-color: var(--court-blue);
+        }
+
+        .category-tab:hover {
+            color: var(--court-blue);
+        }
+
+        .category-content {
+            display: none;
+        }
+
+        .category-content.active {
+            display: block;
+        }
+
+        /* STEP 섹션 */
+        .step-section {
+            margin-bottom: 50px;
+            background: #fff;
+            border: 1px solid var(--border-gray);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .step-header {
+            background: var(--court-blue);
+            color: #fff;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .step-number {
+            font-size: 24px;
+            font-weight: 800;
+            background: rgba(255,255,255,0.2);
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .step-title {
+            font-size: 20px;
+            font-weight: 700;
+            flex: 1;
+        }
+
+        .step-content {
+            padding: 30px;
+        }
+
+        .step-subtitle {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--court-blue);
+            margin-bottom: 15px;
+        }
+
+        .step-description {
+            font-size: 14px;
+            line-height: 1.8;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+        }
+
+        .step-description ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .step-description li {
+            margin-bottom: 8px;
+        }
+
+        /* 주의사항 박스 */
+        .notice-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px 20px;
+            margin: 20px 0;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .notice-box strong {
+            color: #856404;
+        }
+
+        /* 기한 표시 */
+        .deadline-box {
+            background: #e7f3ff;
+            border-left: 4px solid var(--court-blue);
+            padding: 15px 20px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<!-- =================== 헤더 =================== -->
+<div th:replace="~{layout/header :: header}"></div>
+
+<main class="procedure-container">
+    <div class="breadcrumb">
+        <a href="/">▲ HOME</a> &gt;
+        <a th:href="@{/information}">이용안내</a> &gt;
+        <span>국유재산 낙찰 후 절차 안내</span>
+    </div>
+
+    <h1 class="page-title">국유재산 낙찰 후 절차 안내</h1>
+
+    <!-- 카테고리 탭 -->
+    <div class="category-tabs">
+        <button class="category-tab active" onclick="showCategory('lease')">임대(대부) 낙찰 후 절차</button>
+        <button class="category-tab" onclick="showCategory('sale')">매각 낙찰 후 절차</button>
+    </div>
+
+    <!-- 임대(대부) 절차 -->
+    <div id="lease" class="category-content active">
+        <!-- STEP.01 -->
+        <div class="step-section">
+            <div class="step-header">
+                <div class="step-number">01</div>
+                <div class="step-title">잔대금납부</div>
+            </div>
+            <div class="step-content">
+                <div class="step-subtitle">(잔대금납부계좌)</div>
+                <div class="step-description">
+                    <p>낙찰일로부터 <strong>5영업일 이내</strong>에 우리공사의 지정계좌로 입금하시기 바랍니다.</p>
+                    <p style="margin-top: 15px;">낙찰 이후 물건담당자와 협의하여 대부료 납부에 관한 사항 및 계약체결일자 결정</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP.02 -->
+        <div class="step-section">
+            <div class="step-header">
+                <div class="step-number">02</div>
+                <div class="step-title">대부계약체결</div>
+            </div>
+            <div class="step-content">
+                <div class="step-description">
+                    <p>낙찰일로부터 <strong>5영업일 이내</strong>에 계약체결</p>
+                    <p style="margin-top: 15px;">잔대금 납부 확인 후 대부계약 승인 절차 진행</p>
+                </div>
+                
+                <div class="notice-box">
+                    <strong>※ 주의사항</strong><br>
+                    점유자가 있는 물건의 경우 명도기간이 다소 소요될 수 있으며 대부계약 체결은 명도집행 완료일 이후 진행됩니다.
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP.03 -->
+        <div class="step-section">
+            <div class="step-header">
+                <div class="step-number">03</div>
+                <div class="step-title">대부계약서 발송</div>
+            </div>
+            <div class="step-content">
+                <div class="step-subtitle">(해당부점)</div>
+                <div class="step-description">
+                    <p>대부계약 승인 완료 후 대부계약서(보관용 및 회송용 2부)를 피대부자(낙찰자)에게 우편 송부</p>
+                    <p style="margin-top: 15px;">계약서 특약사항 확인 및 기입 후 인장 날인하여 회송용 계약서를 공사에 회송</p>
+                    <p style="margin-top: 15px;">방문하여 계약서 작성시 도장 및 신분증 지참</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 매각 절차 -->
+    <div id="sale" class="category-content">
+        <!-- STEP.01 -->
+        <div class="step-section">
+            <div class="step-header">
+                <div class="step-number">01</div>
+                <div class="step-title">매매계약체결</div>
+            </div>
+            <div class="step-content">
+                <div class="step-description">
+                    <p>낙찰일로부터 <strong>5영업일 이내</strong>에 계약체결</p>
+                    <p style="margin-top: 15px;"><strong>지참서류:</strong> 주민등록초본, 신분증, 도장</p>
+                </div>
+
+                <div class="step-subtitle" style="margin-top: 30px;">부동산 거래신고</div>
+                <div class="step-description">
+                    <p>매매계약 체결일로부터 <strong>30일 이내</strong>에 공사 담당부점에서 단독신고</p>
+                    <p style="margin-top: 10px;">부동산 거래신고 완료 후 신고필증을 매수인에게 교부</p>
+                </div>
+
+                <div class="step-subtitle" style="margin-top: 30px;">취득세 신고, 납부</div>
+                <div class="step-description">
+                    <p>계약보증금 납부일로부터 <strong>60일 이내</strong>에 국유재산 소재지 시·군·구에 신고, 납부</p>
+                </div>
+
+                <div class="notice-box" style="margin-top: 20px;">
+                    <strong>※ 외국인 토지거래 허가</strong><br>
+                    외국인등이 외국인토지법 제 4조 제 2항의 규정에 의하여 토지거래허가를 받아야 하는 경우에는 시장, 군수 또는 구청장에게서 토지취득 허가증을 교부받은 날로부터 5영업일 이내에 매매계약을 체결합니다.
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP.02 -->
+        <div class="step-section">
+            <div class="step-header">
+                <div class="step-number">02</div>
+                <div class="step-title">잔대금납부</div>
+            </div>
+            <div class="step-content">
+                <div class="step-subtitle">(납부계좌지정)</div>
+                <div class="step-description">
+                    <p>매매계약체결일로부터 <strong>60일 이내</strong>에 전액 납부</p>
+                </div>
+                
+                <div class="notice-box">
+                    <strong>※ 주의사항</strong><br>
+                    미납시 매매계약은 해제되고 입찰보증금(계약보증금)은 국고 귀속됩니다.
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP.03 -->
+        <div class="step-section">
+            <div class="step-header">
+                <div class="step-number">03</div>
+                <div class="step-title">소유권이전관련 서류수령</div>
+            </div>
+            <div class="step-content">
+                <div class="step-subtitle">(해당부점)</div>
+                <div class="step-description">
+                    <p>잔대금 완납 후 해당부점에 방문하여 소유권이전에 필요한 서류(매도인인감증명서, 위임장 등)를 수령하여 매수자가 직접 소유권이전절차 진행</p>
+                    <p style="margin-top: 15px;">※ 소유권 이전서류는 잔대금 완납 후 약 1주일 소요</p>
+                </div>
+                
+                <div class="notice-box">
+                    <strong>※ 우편 진행 가능</strong><br>
+                    공사방문이 어려운 경우에는 매매계약서 작성, 소유권이전 필요서류 수령 등을 우편으로 진행할 수 있으니 물건 담당자와 협의하시기 바랍니다.
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<!-- =================== 푸터 =================== -->
+<div th:replace="~{layout/footer :: footer}"></div>
+
+<script>
+function showCategory(category) {
+    // 모든 탭과 컨텐츠 비활성화
+    document.querySelectorAll('.category-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelectorAll('.category-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    // 선택된 탭과 컨텐츠 활성화
+    event.target.classList.add('active');
+    document.getElementById(category).classList.add('active');
+}
+</script>
+
+</body>
+</html>

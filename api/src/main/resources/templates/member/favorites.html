@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>즐겨찾기 - 나의경매</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Court Auction CSS -->
+    <link rel="stylesheet" th:href="@{/css/auction.css}">
+    <link rel="stylesheet" th:href="@{/css/kamco.css}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <style>
+        :root {
+            --court-blue: #004098;
+            --court-navy: #002855;
+            --border-gray: #ddd;
+            --bg-light: #f5f5f5;
+            --text-dark: #333;
+            --text-gray: #777;
+        }
+
+        /* * { box-sizing: border-box; } - auction.css에서 관리 */
+        /* html, body 스타일은 auction.css에서 관리 */
+
+        /* ========== 헤더 (auction/list.html 과 동일 스타일) ========== */
+
+        /* ========== 메인 레이아웃 ========== */
+        .board-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            display: flex;
+            gap: 30px;
+        }
+
+        .side-menu {
+            width: 250px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 0;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .side-menu-header {
+            background: var(--court-blue);
+            color: #fff;
+            padding: 15px 20px;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .side-menu-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .side-menu-item {
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .side-menu-item a {
+            display: block;
+            padding: 14px 20px;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .side-menu-item a:hover {
+            background: #f8f9fa;
+            color: var(--court-blue);
+            padding-left: 25px;
+        }
+
+        .side-menu-item.active a {
+            background: var(--court-blue);
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .main-content {
+            flex: 1;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            min-width: 0;
+        }
+
+        .breadcrumb {
+            padding: 15px 25px;
+            border-bottom: 1px solid var(--border-gray);
+            font-size: 13px;
+            color: var(--text-gray);
+        }
+
+        .breadcrumb a {
+            color: var(--text-gray);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            color: var(--court-blue);
+        }
+
+        .search-summary {
+            padding: 20px 25px;
+            background: #f8f9fa;
+            border-bottom: 1px solid var(--border-gray);
+        }
+
+        .search-summary-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+
+        .search-summary-text {
+            font-size: 14px;
+            color: var(--text-gray);
+        }
+
+        .search-summary-text strong {
+            color: var(--court-blue);
+            font-weight: 700;
+        }
+
+        .note {
+            padding: 12px 25px;
+            background: #fffbf0;
+            border-bottom: 1px solid #ffe082;
+            font-size: 13px;
+            color: #795548;
+        }
+
+        /* ========== 즐겨찾기 테이블 ========== */
+        .table-container {
+            padding: 25px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow-x: auto !important;
+        }
+
+        .auction-table {
+            width: 100% !important;
+            max-width: none !important;
+            min-width: 100% !important;
+            border-collapse: collapse !important;
+            font-size: 13px !important;
+            table-layout: fixed !important;
+        }
+        
+        .auction-table th,
+        .auction-table td {
+            border-radius: 0 !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+
+        .auction-table thead {
+            background: #f8f9fa;
+            border-top: 2px solid var(--court-blue);
+            border-bottom: 1px solid var(--border-gray);
+        }
+
+        .auction-table thead th {
+            padding: 15px 10px;
+            text-align: center;
+            font-weight: 700;
+            color: var(--text-dark);
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        .auction-table tbody tr {
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .auction-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .auction-table tbody td {
+            padding: 15px 10px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: top;
+        }
+
+        /* 소재지 및 내역 */
+        .location-details {
+            padding: 5px 0;
+        }
+
+        .usage-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            background: var(--court-blue);
+            color: #fff;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-right: 5px;
+        }
+
+        .case-number {
+            font-size: 11px;
+            color: var(--text-gray);
+        }
+
+        .address {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin: 8px 0 5px 0;
+            transition: color 0.2s;
+        }
+
+        .building-info {
+            font-size: 12px;
+            color: var(--text-gray);
+            line-height: 1.5;
+        }
+
+        /* 가격 정보 */
+        .price-info {
+            text-align: left;
+        }
+
+        .price-label {
+            font-size: 12px;
+            color: var(--text-gray);
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .price-value {
+            font-size: 14px;
+            color: var(--text-dark);
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .price-value.min-price {
+            color: var(--court-blue);
+        }
+
+        .price-percent {
+            font-size: 12px;
+            color: var(--text-gray);
+            margin-left: 5px;
+            font-weight: 500;
+        }
+
+        /* 담당계 매각기일 */
+        .dept-info {
+            text-align: center;
+        }
+
+        .dept-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .auction-date {
+            font-size: 13px;
+            color: var(--court-blue);
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .status-badge-table {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #fff3cd;
+            color: #856404;
+            border-radius: 0;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge-table.new {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge-table.failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* 물건번호 */
+        .item-number {
+            text-align: center;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        /* 비고 */
+        .remarks {
+            font-size: 12px;
+            color: var(--text-gray);
+            line-height: 1.8;
+        }
+
+        /* 삭제 버튼 */
+        .btn-remove-favorite {
+            background: #dc3545;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-remove-favorite:hover {
+            background: #c82333;
+        }
+
+        .no-favorites {
+            text-align: center;
+            padding: 80px 20px;
+            background: #fff;
+        }
+
+        .no-favorites-icon {
+            font-size: 72px;
+            margin-bottom: 20px;
+            color: #ddd;
+        }
+
+        .no-favorites h3 {
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .no-favorites p {
+            color: #999;
+            margin-bottom: 30px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            background: #fff;
+        }
+    </style>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+
+<!-- 헤더 -->
+<!-- =================== 헤더 =================== -->
+<div th:replace="~{layout/header :: header}"></div>
+
+<!-- 메인 컨텐츠 -->
+<main class="board-container">
+    <!-- 좌측 네비 -->
+    <aside class="side-menu">
+        <div class="side-menu-header">• 나의경매</div>
+        <ul class="side-menu-list">
+            <li class="side-menu-item active">
+                <a th:href="@{/myFavorites}">
+                    <i class="fas fa-star"></i> 즐겨찾기
+                </a>
+            </li>
+            <li class="side-menu-item">
+                <a th:href="@{/payment/my-payments}">
+                    <i class="fas fa-shopping-cart"></i> 구매내역
+                </a>
+            </li>
+            <li class="side-menu-item">
+                <a th:href="@{/price-alerts}">
+                    <i class="fas fa-bell"></i> 가격 알림
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- 오른쪽 메인 -->
+    <section class="main-content">
+        <!-- 브레드크럼 -->
+        <div class="breadcrumb">
+            <a th:href="@{/main}">▲ HOME</a> &gt;
+            <a th:href="@{/myFavorites}">나의경매</a> &gt;
+            <span>즐겨찾기</span>
+        </div>
+
+        <!-- 검색 요약 -->
+        <div class="search-summary">
+            <div class="search-summary-title">즐겨찾기 목록</div>
+            <div class="search-summary-text">
+                총 즐겨찾기 <strong id="favoritesCount">0건</strong>
+            </div>
+        </div>
+
+        <!-- 안내 문구 -->
+        <div class="note">
+            • 소재지 및 내역을 클릭하면 물건상세 페이지로 이동합니다.
+        </div>
+
+        <!-- 즐겨찾기 목록 (테이블) -->
+        <div class="table-container">
+            <div id="favoritesContainer">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 32px; color: var(--court-blue); margin-bottom: 15px;"></i>
+                    <p style="color: var(--text-gray);">즐겨찾기 목록을 불러오는 중...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- 푸터 -->
+<!-- =================== 푸터 =================== -->
+<div th:replace="~{layout/footer :: footer}"></div>
+
+<!-- JavaScript -->
+<script>
+    // jQuery 로드 확인 및 초기화
+    function initFavorites() {
+        console.log('즐겨찾기 페이지 초기화');
+        if (typeof jQuery !== 'undefined') {
+            loadFavorites();
+        } else {
+            console.error('jQuery가 로드되지 않았습니다.');
+            setTimeout(function() {
+                if (typeof jQuery !== 'undefined') {
+                    loadFavorites();
+                } else {
+                    const container = document.getElementById('favoritesContainer');
+                    if (container) {
+                        container.innerHTML = '<div class="no-favorites"><p>페이지 로드 중 오류가 발생했습니다. 새로고침해주세요.</p></div>';
+                    }
+                }
+            }, 1000);
+        }
+    }
+    
+    // DOM 로드 완료 후 초기화
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initFavorites);
+    } else {
+        if (typeof jQuery !== 'undefined') {
+            $(document).ready(initFavorites);
+        } else {
+            initFavorites();
+        }
+    }
+    
+    // 즐겨찾기 목록 로드
+    function loadFavorites() {
+        console.log('=== 즐겨찾기 목록 로드 시작 ===');
+        
+        if (typeof jQuery === 'undefined') {
+            console.error('❌ jQuery가 없습니다.');
+            showNoFavorites('jQuery를 로드할 수 없습니다.');
+            return;
+        }
+        
+        const container = $('#favoritesContainer');
+        if (!container || container.length === 0) {
+            console.error('❌ favoritesContainer를 찾을 수 없습니다.');
+            return;
+        }
+        
+        console.log('✅ 컨테이너 찾음, AJAX 요청 시작...');
+        
+        $.ajax({
+            url: '/api/favorites',
+            method: 'GET',
+            timeout: 15000,
+            dataType: 'json',
+            beforeSend: function() {
+                console.log('📤 AJAX 요청 전송 중...');
+            },
+            success: function(response) {
+                console.log('========================================');
+                console.log('✅ AJAX 성공 응답 받음');
+                console.log('========================================');
+                console.log('전체 응답:', JSON.stringify(response, null, 2));
+                console.log('응답 타입:', typeof response);
+                console.log('response.success:', response ? response.success : 'undefined');
+                console.log('response.favorites:', response ? response.favorites : 'undefined');
+                console.log('response.favorites 타입:', response && response.favorites ? typeof response.favorites : 'undefined');
+                console.log('response.favorites 배열 여부:', response && response.favorites ? Array.isArray(response.favorites) : 'undefined');
+                
+                try {
+                    if (!response) {
+                        console.error('❌ 응답이 null입니다.');
+                        showNoFavorites('서버 응답이 없습니다.');
+                        return;
+                    }
+                    
+                    // 응답 구조 확인
+                    console.log('응답의 모든 키:', Object.keys(response));
+                    
+                    if (response.success === true) {
+                        // favorites가 배열인지 확인
+                        let favoritesArray = [];
+                        if (response.favorites !== undefined) {
+                            if (Array.isArray(response.favorites)) {
+                                favoritesArray = response.favorites;
+                            } else if (response.favorites && typeof response.favorites === 'object') {
+                                // 단일 객체인 경우 배열로 변환
+                                favoritesArray = [response.favorites];
+                            }
+                        }
+                        
+                        console.log('✅ 즐겨찾기 목록 발견:', favoritesArray.length, '개');
+                        console.log('즐겨찾기 배열:', favoritesArray);
+                        
+                        if (favoritesArray.length === 0) {
+                            console.log('ℹ️ 즐겨찾기가 없습니다.');
+                            showNoFavorites();
+                            $('#favoritesCount').text('0건');
+                        } else {
+                            // 각 즐겨찾기 항목의 구조 확인
+                            favoritesArray.forEach((fav, idx) => {
+                                console.log(`즐겨찾기 [${idx}]:`, fav);
+                                console.log(`  - favoriteId:`, fav.favoriteId || fav.id);
+                                console.log(`  - itemId:`, fav.itemId);
+                                console.log(`  - item:`, fav.item);
+                                console.log(`  - item 존재 여부:`, fav.item ? '있음' : '없음');
+                                if (fav.item) {
+                                    console.log(`  - item.cltrNo:`, fav.item.cltrNo);
+                                    console.log(`  - item.cltrNm:`, fav.item.cltrNm);
+                                }
+                            });
+                            
+                            displayFavorites(favoritesArray);
+                            $('#favoritesCount').text(favoritesArray.length + '건');
+                        }
+                    } 
+                    else if (response.success === false) {
+                        console.warn('⚠️ 즐겨찾기 조회 실패:', response.message || '알 수 없는 오류');
+                        showNoFavorites(response.message || '즐겨찾기를 불러올 수 없습니다.');
+                        $('#favoritesCount').text('0건');
+                    }
+                    else {
+                        console.error('❌ 예상치 못한 응답 구조:', response);
+                        console.error('응답 키들:', Object.keys(response));
+                        showNoFavorites('응답 형식이 올바르지 않습니다.');
+                    }
+                } catch (e) {
+                    console.error('❌ 응답 처리 중 예외 발생:', e);
+                    console.error('스택:', e.stack);
+                    showNoFavorites('데이터 처리 중 오류가 발생했습니다.');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('❌ AJAX 오류 발생');
+                console.error('상태:', status);
+                console.error('오류:', error);
+                console.error('상태 코드:', xhr.status);
+                console.error('응답 텍스트:', xhr.responseText);
+                
+                const container = $('#favoritesContainer');
+                if (xhr.status === 401 || xhr.status === 403) {
+                    container.html('<div class="no-favorites"><h3>로그인이 필요합니다</h3><p><a href="/memberLogin">로그인하러 가기</a></p></div>');
+                } else if (xhr.status === 0) {
+                    showNoFavorites('서버에 연결할 수 없습니다. 네트워크를 확인해주세요.');
+                } else if (xhr.status === 500) {
+                    showNoFavorites('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+                } else {
+                    showNoFavorites('즐겨찾기를 불러오는 중 오류가 발생했습니다.');
+                }
+            },
+            complete: function() {
+                console.log('✅ AJAX 요청 완료');
+            }
+        });
+    }
+    
+    // 즐겨찾기 표시 (테이블 형태 - 상세페이지 스타일)
+    function displayFavorites(favorites) {
+        console.log('=== displayFavorites 호출 ===');
+        console.log('즐겨찾기 개수:', favorites ? favorites.length : 0);
+        console.log('즐겨찾기 데이터:', favorites);
+        
+        if (typeof jQuery === 'undefined') {
+            console.error('❌ jQuery가 없습니다.');
+            return;
+        }
+        
+        const container = $('#favoritesContainer');
+        if (!container || container.length === 0) {
+            console.error('❌ favoritesContainer를 찾을 수 없습니다.');
+            return;
+        }
+        
+        if (!favorites || !Array.isArray(favorites) || favorites.length === 0) {
+            console.log('ℹ️ 즐겨찾기가 없습니다.');
+            showNoFavorites();
+            return;
+        }
+        
+        console.log('✅ 즐겨찾기 목록 표시 시작:', favorites.length, '개');
+        let html = '<table class="auction-table">';
+        html += '<thead>';
+        html += '<tr>';
+        html += '<th style="width: 5%;">물건<br>번호 ▲</th>';
+        html += '<th style="width: 45%;">소재지 및 내역 ▲</th>';
+        html += '<th style="width: 15%;">비고</th>';
+        html += '<th style="width: 20%;">감정평가액 ▲<br>최저매각가격</th>';
+        html += '<th style="width: 10%;">담당계<br>매각기일 ▲</th>';
+        html += '<th style="width: 5%;">삭제</th>';
+        html += '</tr>';
+        html += '</thead>';
+        html += '<tbody>';
+        
+        let processedCount = 0;
+        
+        favorites.forEach(function(fav, index) {
+            try {
+                console.log(`========================================`);
+                console.log(`[${index}] 즐겨찾기 항목 처리 시작`);
+                console.log(`========================================`);
+                console.log(`[${index}] 전체 즐겨찾기 객체:`, fav);
+                console.log(`[${index}] fav.itemId:`, fav.itemId);
+                console.log(`[${index}] fav.favoriteId:`, fav.favoriteId);
+                console.log(`[${index}] fav.item:`, fav.item);
+                console.log(`[${index}] fav.item 타입:`, fav.item ? typeof fav.item : 'null');
+                
+                // item이 없으면 itemId로 조회 시도
+                let item = fav.item || {};
+                
+                // item이 비어있거나 null이면 경고만 하고 계속 진행
+                if (!item || Object.keys(item).length === 0) {
+                    console.warn(`[${index}] ⚠️ 물건 정보가 없습니다. itemId:`, fav.itemId);
+                    console.warn(`[${index}] ⚠️ 하지만 계속 진행합니다. 기본값 사용.`);
+                    // return하지 않고 기본값으로 계속 진행
+                    item = {
+                        cltrNo: fav.itemId || '',
+                        cltrNm: '물건 정보 없음',
+                        goodsNm: '',
+                        minBidPrc: 0,
+                        apslAsesAvgAmt: 0,
+                        ldnmAdrs: '',
+                        nmrdAdrs: '',
+                        sido: '',
+                        pbctClsDtm: '',
+                        uscbCnt: 0
+                    };
+                }
+                
+                console.log(`[${index}] 최종 item 정보:`, item);
+                
+                const itemName = escapeHtml(item.cltrNm || item.goodsNm || '상품명 없음');
+                const minPrice = item.minBidPrc || 0;
+                const appraisalPrice = item.apslAsesAvgAmt || 0;
+                const cltrNo = String(item.cltrNo || '').replace(/"/g, '&quot;').replace(/'/g, "&#39;");
+                const favoriteId = fav.favoriteId || fav.id || 0;
+                const address = escapeHtml(item.ldnmAdrs || item.nmrdAdrs || item.sido || '');
+                const buildingInfo = escapeHtml(item.goodsNm || '');
+                const pbctClsDtm = item.pbctClsDtm || '';
+                const uscbCnt = item.uscbCnt || 0;
+                
+                // 날짜 포맷팅 (YYYYMMDDHHMMSS -> YYYY.MM.DD)
+                let formattedDate = '-';
+                if (pbctClsDtm && pbctClsDtm.length >= 8) {
+                    const year = pbctClsDtm.substring(0, 4);
+                    const month = pbctClsDtm.substring(4, 6);
+                    const day = pbctClsDtm.substring(6, 8);
+                    formattedDate = year + '.' + month + '.' + day;
+                }
+                
+                const minPriceFormatted = formatPrice(minPrice);
+                const appraisalPriceFormatted = formatPrice(appraisalPrice);
+                
+                // 가격 비율 계산
+                let pricePercent = '';
+                if (appraisalPrice > 0 && minPrice > 0) {
+                    const percent = Math.round((minPrice * 100) / appraisalPrice);
+                    pricePercent = '(' + percent + '%)';
+                }
+                
+                html += '<tr onclick="goToDetail(\'' + cltrNo + '\')" style="cursor: pointer;">';
+                
+                // 물건번호
+                html += '<td class="item-number">' + (index + 1) + '</td>';
+                
+                // 소재지 및 내역
+                html += '<td>';
+                html += '<div class="location-details">';
+                html += '<div style="display: flex; gap: 8px; align-items: center; margin-bottom: 5px;">';
+                html += '<span class="usage-badge">온비드</span>';
+                html += '<span class="case-number">물건번호: ' + cltrNo + '</span>';
+                html += '</div>';
+                html += '<div class="address">';
+                html += address || itemName;
+                html += '</div>';
+                if (buildingInfo) {
+                    html += '<div class="building-info">' + buildingInfo + '</div>';
+                }
+                html += '</div>';
+                html += '</td>';
+                
+                // 비고
+                html += '<td class="remarks">';
+                html += '<div>• 공공경매</div>';
+                if (uscbCnt > 0) {
+                    html += '<div>• 유찰 ' + uscbCnt + '회</div>';
+                }
+                html += '</td>';
+                
+                // 감정평가액 / 최저매각가격
+                html += '<td class="price-info">';
+                html += '<div class="price-label">감정평가액</div>';
+                html += '<div class="price-value">' + (appraisalPrice > 0 ? appraisalPriceFormatted : '-') + '</div>';
+                html += '<div class="price-label">최저매각가격</div>';
+                html += '<div class="price-value min-price">';
+                html += '<span>' + (minPrice > 0 ? minPriceFormatted : '-') + '</span>';
+                if (pricePercent) {
+                    html += '<span class="price-percent">' + pricePercent + '</span>';
+                }
+                html += '</div>';
+                html += '</td>';
+                
+                // 담당계 / 매각기일
+                html += '<td class="dept-info">';
+                html += '<div class="dept-name">캠코</div>';
+                html += '<div class="auction-date">' + formattedDate + '</div>';
+                html += '<div>';
+                if (uscbCnt === 0) {
+                    html += '<span class="status-badge-table new">신건</span>';
+                } else if (uscbCnt <= 2) {
+                    html += '<span class="status-badge-table failed">유찰 ' + uscbCnt + '회</span>';
+                } else {
+                    html += '<span class="status-badge-table">유찰 ' + uscbCnt + '회</span>';
+                }
+                html += '</div>';
+                html += '</td>';
+                
+                // 삭제 버튼 (클릭 시 이벤트 전파 중지)
+                html += '<td style="text-align: center;" onclick="event.stopPropagation();">';
+                html += '<button class="btn-remove-favorite" onclick="event.stopPropagation(); removeFavorite(' + favoriteId + ')" title="즐겨찾기 삭제">';
+                html += '<i class="fas fa-trash-alt"></i>';
+                html += '</button>';
+                html += '</td>';
+                
+                html += '</tr>';
+                
+                processedCount++;
+            } catch (e) {
+                console.error(`[${index}] ❌ 즐겨찾기 항목 처리 중 오류:`, e);
+                console.error('오류 발생한 즐겨찾기 데이터:', fav);
+            }
+        });
+        
+        html += '</tbody>';
+        html += '</table>';
+        container.html(html);
+        
+        console.log(`✅ 즐겨찾기 표시 완료: ${processedCount}개 항목 처리됨`);
+    }
+    
+    // 카테고리에 따른 이미지 반환
+    function getImageByCategory(category) {
+        if (!category) return '/img/placeholder.svg';
+        
+        const categoryMap = {
+            '부동산': '/img/real-estate.jpg',
+            '토지': '/img/land.jpg',
+            '건물': '/img/building.jpg',
+            '아파트': '/img/apartment.jpg',
+            '상가': '/img/commercial.jpg',
+            '공장': '/img/factory.jpg',
+            '동산': '/img/movable.jpg',
+            '차량': '/img/vehicle.jpg',
+            '기계': '/img/machine.jpg',
+            '일반': '/img/placeholder.svg'
+        };
+        
+        for (const key in categoryMap) {
+            if (category.includes(key)) {
+                return categoryMap[key];
+            }
+        }
+        
+        return '/img/placeholder.svg';
+    }
+    
+    // HTML 이스케이프
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // 가격 포맷팅
+    function formatPrice(price) {
+        if (!price || price === 0) return '0';
+        return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+    
+    // 상세페이지로 이동
+    function goToDetail(cltrNo) {
+        if (!cltrNo) {
+            alert('물건 정보를 찾을 수 없습니다.');
+            return;
+        }
+        window.location.href = '/api-item-detail?cltrNo=' + encodeURIComponent(cltrNo);
+    }
+    
+    // 즐겨찾기 없음 표시
+    function showNoFavorites(message) {
+        const container = $('#favoritesContainer');
+        if (!container || container.length === 0) {
+            console.error('favoritesContainer를 찾을 수 없습니다.');
+            return;
+        }
+        
+        const displayMessage = message || '즐겨찾기한 상품이 없습니다';
+        const html = '<div class="no-favorites">' +
+            '<div class="no-favorites-icon">⭐</div>' +
+            '<h3>' + (message ? message : '즐겨찾기한 상품이 없습니다') + '</h3>' +
+            (message ? '' : '<p>관심 있는 상품을 즐겨찾기에 추가해보세요!</p>') +
+            (message ? '' : '<a href="/auctionList" class="btn" style="padding: 12px 24px; background: var(--court-blue); color: #fff; text-decoration: none; border-radius: 0; font-size: 16px; font-weight: 700; display: inline-block;">경매 둘러보기</a>') +
+            '</div>';
+        container.html(html);
+    }
+    
+    // 즐겨찾기 삭제
+    function removeFavorite(favoriteId) {
+        console.log('=== 즐겨찾기 삭제 요청 ===');
+        console.log('favoriteId:', favoriteId);
+        
+        if (!favoriteId) {
+            alert('즐겨찾기 ID가 없습니다.');
+            console.error('❌ favoriteId가 null 또는 undefined입니다.');
+            return;
+        }
+        
+        if (!confirm('즐겨찾기에서 삭제하시겠습니까?')) {
+            return;
+        }
+        
+        $.ajax({
+            url: '/api/favorites/' + favoriteId,
+            method: 'DELETE',
+            dataType: 'json',
+            beforeSend: function() {
+                console.log('📤 삭제 요청 전송 중...');
+            },
+            success: function(response) {
+                console.log('✅ 삭제 응답 받음:', response);
+                
+                if (response && response.success) {
+                    alert('즐겨찾기에서 삭제되었습니다.');
+                    console.log('✅ 즐겨찾기 삭제 성공');
+                    // 목록 다시 로드
+                    loadFavorites();
+                } else {
+                    const errorMsg = response ? (response.message || '알 수 없는 오류') : '응답이 없습니다.';
+                    alert('삭제 중 오류가 발생했습니다: ' + errorMsg);
+                    console.error('❌ 삭제 실패:', errorMsg);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('❌ 즐겨찾기 삭제 오류');
+                console.error('상태 코드:', xhr.status);
+                console.error('상태:', status);
+                console.error('오류:', error);
+                console.error('응답 텍스트:', xhr.responseText);
+                
+                let errorMsg = '삭제 중 오류가 발생했습니다.';
+                
+                if (xhr.status === 401 || xhr.status === 403) {
+                    errorMsg = '로그인이 필요합니다.';
+                } else if (xhr.status === 404) {
+                    errorMsg = '즐겨찾기를 찾을 수 없습니다.';
+                } else if (xhr.status === 500) {
+                    errorMsg = '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
+                } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMsg = xhr.responseJSON.message;
+                }
+                
+                alert(errorMsg);
+            },
+            complete: function() {
+                console.log('✅ 삭제 요청 완료');
+            }
+        });
+    }
+</script>
+
+</body>
+</html>

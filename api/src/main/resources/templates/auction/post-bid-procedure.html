@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>낙찰 후 절차 안내 - 경매정보</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/auction.css}">
+    <link rel="stylesheet" th:href="@{/css/kamco.css}">
+    
+    <style>
+        :root {
+            --court-blue: #004098;
+            --border-gray: #ddd;
+            --bg-light: #f5f5f5;
+            --text-dark: #222;
+            --text-gray: #777;
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            font-family: 'Nanum Gothic', 'Malgun Gothic', sans-serif;
+            background: #f5f5f5;
+        }
+
+        /* 헤더 */
+
+        /* 메인 컨텐츠 */
+        .procedure-container {
+            max-width: 1200px;
+            margin: 30px auto 60px auto;
+            padding: 0 20px;
+        }
+
+        .breadcrumb {
+            font-size: 13px;
+            color: var(--text-gray);
+            margin-bottom: 20px;
+        }
+
+        .breadcrumb a {
+            color: var(--text-gray);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover { color: var(--court-blue); }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 800;
+            margin: 0 0 30px 0;
+            color: var(--text-dark);
+            border-bottom: 3px solid var(--court-blue);
+            padding-bottom: 15px;
+        }
+
+        /* STEP 섹션 */
+        .step-section {
+            margin-bottom: 50px;
+            background: #fff;
+            border: 1px solid var(--border-gray);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .step-header {
+            background: var(--court-blue);
+            color: #fff;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .step-number {
+            font-size: 24px;
+            font-weight: 800;
+            background: rgba(255,255,255,0.2);
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .step-title {
+            font-size: 20px;
+            font-weight: 700;
+            flex: 1;
+        }
+
+        .step-content {
+            padding: 30px;
+        }
+
+        .step-subtitle {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--court-blue);
+            margin-bottom: 15px;
+        }
+
+        .step-description {
+            font-size: 14px;
+            line-height: 1.8;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+        }
+
+        .step-description ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .step-description li {
+            margin-bottom: 8px;
+        }
+
+        /* 표 스타일 */
+        .document-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        .document-table th,
+        .document-table td {
+            border: 1px solid var(--border-gray);
+            padding: 12px;
+            text-align: left;
+        }
+
+        .document-table th {
+            background: var(--bg-light);
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .document-table td {
+            color: var(--text-dark);
+        }
+
+        .document-table tr:nth-child(even) {
+            background: #fafafa;
+        }
+
+        /* 주의사항 박스 */
+        .notice-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px 20px;
+            margin: 20px 0;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .notice-box strong {
+            color: #856404;
+        }
+
+        /* 기한 표시 */
+        .deadline-box {
+            background: #e7f3ff;
+            border-left: 4px solid var(--court-blue);
+            padding: 15px 20px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        .deadline-box table {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .deadline-box th,
+        .deadline-box td {
+            padding: 8px;
+            border: 1px solid #b3d9ff;
+        }
+
+        .deadline-box th {
+            background: #cce7ff;
+            font-weight: 700;
+        }
+
+        /* 하단 안내 */
+        .final-notice {
+            background: #f8f9fa;
+            border: 1px solid var(--border-gray);
+            padding: 20px;
+            margin-top: 30px;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .final-notice strong {
+            color: var(--court-blue);
+        }
+    </style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<!-- =================== 헤더 =================== -->
+<div th:replace="~{layout/header :: header}"></div>
+
+<main class="procedure-container">
+    <div class="breadcrumb">
+        <a href="/">▲ HOME</a> &gt;
+        <a th:href="@{/information}">이용안내</a> &gt;
+        <span>낙찰 후 절차 안내</span>
+    </div>
+
+    <h1 class="page-title">낙찰 후 절차 안내</h1>
+
+    <!-- STEP.01 -->
+    <div class="step-section">
+        <div class="step-header">
+            <div class="step-number">01</div>
+            <div class="step-title">매각결정 통지서 수령</div>
+        </div>
+        <div class="step-content">
+            <div class="step-subtitle">(해당부점)</div>
+            <div class="step-description">
+                <p><strong>방문 수령</strong></p>
+                <p>낙찰자 본인이 신분증과 도장을 지참한 후 물건의 해당부점을 직접 방문하여 담당자로부터 매각결정통지서를 수령합니다.</p>
+                <p style="margin-top: 10px;">※ 대리인이 방문할 경우 인감증명서를 첨부한 위임장 지참하며, 방문전에 담당자와 통화하시기 바랍니다.</p>
+                
+                <p style="margin-top: 20px;"><strong>전자교부</strong></p>
+                <p>전자교부를 신청한 낙찰자는 온비드 <strong>[나의온비드 > 입찰관리 > 입찰결과내역]</strong>에 접속하여 매각결정통지서를 발급합니다.</p>
+            </div>
+            
+            <div class="notice-box">
+                <strong>※ 주의사항</strong><br>
+                매각결정기일 전에 압류와 관계되는 체납액의 전부가 납부 또는 충당되는 등(체납자 또는 제3자가 압류의 원인인 체납세금을 납부하는 등) 압류 해제의 사유 및 그 밖에 매각결정을 할 수 없는 중요한 사유가 발생하여 공매대행의뢰기관에서 공매의 취소(중지)를 요청하는 경우 또는 그러한 사실이 추후 확인될 경우 매각결정이 취소될 수 있습니다.
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP.02 -->
+    <div class="step-section">
+        <div class="step-header">
+            <div class="step-number">02</div>
+            <div class="step-title">잔대금납부</div>
+        </div>
+        <div class="step-content">
+            <div class="step-subtitle">(잔대금 납부계좌)</div>
+            <div class="step-description">
+                <p>매각결정통지서에 표시된 납부기한까지 잔대금납부계좌로 입금하시기 바랍니다.</p>
+            </div>
+            
+            <div class="deadline-box">
+                <strong>잔대금 납부 기한 산정 기준</strong>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>낙찰금액</th>
+                            <th>납부기한</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>3,000만원 미만</td>
+                            <td>매각결정기일로부터 7일</td>
+                        </tr>
+                        <tr>
+                            <td>3,000만원 이상</td>
+                            <td>매각결정기일로부터 30일</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP.03 -->
+    <div class="step-section">
+        <div class="step-header">
+            <div class="step-number">03</div>
+            <div class="step-title">압류재산 소유권이전 준비</div>
+        </div>
+        <div class="step-content">
+            <div class="step-subtitle">1. 한국자산관리공사 (온비드)</div>
+            <table class="document-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40%;">서류명</th>
+                        <th style="width: 15%;">부수</th>
+                        <th>비고</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>매각결정통지서(원본)</td>
+                        <td>1부</td>
+                        <td>한국자산관리공사 방문 또는 온비드 홈페이지에서 발급</td>
+                    </tr>
+                    <tr>
+                        <td>보증금납입영수증(원본)</td>
+                        <td>1부</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>잔대금납입영수증(원본)</td>
+                        <td>1부</td>
+                        <td>한국자산관리공사 방문 또는 온비드 홈페이지에서 발급</td>
+                    </tr>
+                    <tr>
+                        <td>등기청구서</td>
+                        <td>1부</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>등기필증수령요청서</td>
+                        <td>1부</td>
+                        <td>-</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="step-subtitle" style="margin-top: 30px;">2. 등기소 (인터넷등기소포함)</div>
+            <table class="document-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40%;">서류명</th>
+                        <th style="width: 15%;">부수</th>
+                        <th>비고</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>토지, 건물등기사항 전부증명서<br>(www.iros.go.kr)</td>
+                        <td>각1통</td>
+                        <td>인터넷등기소 출력(제출용) 후 제출 가능</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="step-subtitle" style="margin-top: 30px;">3. 관할시,군,구청 세무 및 재무과</div>
+            <table class="document-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40%;">서류명</th>
+                        <th style="width: 15%;">부수</th>
+                        <th>비고</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>토지(임야) · 건축물대장</td>
+                        <td>각1통</td>
+                        <td>공유자연명부, 전유부, 대지권등록부 포함<br>정부24 홈페이지 출력(교부용) 후 제출 가능</td>
+                    </tr>
+                    <tr>
+                        <td>취득세 및 등록면허세 영수증발급<br>(위택스 통한 납부 가능)</td>
+                        <td>영수증</td>
+                        <td>등기소보관용으로 제출<br>발급시 지참서류 : 매각결정서, 보증금·잔대금납입영수증 사본<br>취득세영수증에 과세시가표준액을 기재받을 것 (국민주택채권 매입액 계산시 필요)<br>등록면허세 산정기준 : 등기사항증명서상 말소할 건수 x 7,200원<br>대토(환토)인 경우 취득세 감면혜택이 있으므로 사전조사 후 납부</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="step-subtitle" style="margin-top: 30px;">4. 정부24 홈페이지 또는 물건소재지 관할 행정복지센터(주민센터)</div>
+            <table class="document-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40%;">서류명</th>
+                        <th style="width: 15%;">부수</th>
+                        <th>비고</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>매수자 주민등록등(초)본</td>
+                        <td>1통</td>
+                        <td>정부24 홈페이지 또는 행정복지센터(주민센터)에서 발급<br>(발급시 주민등록번호 뒷자리를 포함하여 발급)</td>
+                    </tr>
+                    <tr>
+                        <td>농지취득자격증명<br>농지대장</td>
+                        <td>1부</td>
+                        <td>※농지 매수시에만 발급※ (지목 전,답,과수원)<br>정부24 홈페이지 또는 행정복지센터(주민센터)에서 발급<br>발급시 지참서류 : 농업경영계획서<br>소재지 관할 행정복지센터에 확인 후 농지취득자격증명이 필요 없는 경우에는 농지취득자격증명 반려문 또는 토지이용계획확인서 제출<br>농지대장이 있는 농민이 농지를 매수한 경우에도 농지취득자격증명은 필요함</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="step-subtitle" style="margin-top: 30px;">5. 금융기관(채권매입/등기신청수수료납부)</div>
+            <table class="document-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40%;">서류명</th>
+                        <th style="width: 15%;">부수</th>
+                        <th>비고</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>국민주택채권 매입필영수증</td>
+                        <td>영수증</td>
+                        <td>영수증원본으로 제출<br>(취급기관 : 우리,기업,신한,국민,농협은행)<br>※ 취급하지 않는 지점도 있으니 해당지점에 사전 문의 후 방문하시기 바랍니다.<br>은행창구에서 수령한 영수증 또는 개인 인터넷 뱅킹으로 매입 후 출력한 영수증 제출가능<br>취득세납부고지서상의 시가표준액을 기준으로 매입<br>(시가표준액이 토지 500만원, 기타부동산 1,000만원, 주택 2,000만원 이상인 경우에만 매입)<br>농민이 농지 취득할 경우 면제 (농업인확인서 제출)<br>국민주택채권 매입기준표 기준시가표준액 확인</td>
+                    </tr>
+                    <tr>
+                        <td>등기신청수수료납부</td>
+                        <td>영수증</td>
+                        <td>영수증원본으로 제출<br>(취급기관 : 우리,신한,농협,SC,경남,대구,전북,광주은행)<br>※ 취급하지 않는 지점도 있으니 해당지점에 사전 문의 후 방문하시기 바랍니다.<br>인터넷등기소 홈페이지에서 등기신청수수료 전자납부 가능<br>등기부등본상 제권리(압류, 가압류, 근저당 등)말소용<br>→ 소유권 이전 필지당 기본 18,000원, 말소 등록 건당 X4,000원<br>예시) 토지 2필지, 건물1, 총말소건수 5건인 경우<br>(18,000원 X 3 + 4,000원 X 5 = 74,000원)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- STEP.04 -->
+    <div class="step-section">
+        <div class="step-header">
+            <div class="step-number">04</div>
+            <div class="step-title">소유권이전 등기촉탁</div>
+        </div>
+        <div class="step-content">
+            <div class="step-subtitle">(해당부점) 한국자산관리공사 제출</div>
+            <div class="step-description">
+                <p>위에서 준비된 모든 서류와 등기(등록)청구서 및 등기필증수령요청서 작성 제출</p>
+                <p style="margin-top: 10px;">(등기(등록)청구서 및 등기필증수령요청서 발급화면 : 온비드>입찰/이용안내>자료실>서식자료실>압류재산>16.등기(등록)청구서 및 등기필증수령요청서)</p>
+                
+                <p style="margin-top: 20px;"><strong>등기필증 발송용 우표 제출</strong></p>
+                <p>우체국에서 반드시 발송비용만큼 우표 구매하여 제출</p>
+                <p style="margin-top: 10px;">※ 종별, 중량, 지역 등에 따라 우편료가 달라지므로 담당자에게 별도 문의 후 구입하시기 바랍니다.</p>
+                
+                <p style="margin-top: 20px;"><strong>등기필증 직접교부시(우편으로 신청한 경우도 포함)</strong></p>
+                <p>→ 본인 도장,신분증 지참, 대리인 오실때는 인감증명서와 위임장 지참</p>
+            </div>
+            
+            <div class="final-notice">
+                <p><strong>※ 중요 안내사항</strong></p>
+                <ul>
+                    <li>모든 서류는 1개월 안에 발급받은 것(사본 및 팩스본 접수불가)으로 준비하시기 바라며, 압류재산 소유권이전 등기는 공사의 촉탁으로 이루어지므로 사전에 해당부점 업무담당자에게 상기 사항을 문의하시기 바랍니다.</li>
+                    <li>아울러 소유권이전 준비과정에서 부득이하게 준비서류 발급 등을 법무사에게 위임하고자 하는 경우에는 대한법무사협회(kjaar.kabl.kr)를 통해 해당 법무사를 확인하시기 바랍니다.</li>
+                    <li>소유권 이전에 필요한 서류를 구비하여 물건 담당 부점에 우편 제출(또는 방문 제출)하여 소유권이전 등기촉탁을 의뢰합니다.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP.05 -->
+    <div class="step-section">
+        <div class="step-header">
+            <div class="step-number">05</div>
+            <div class="step-title">등기필증 수령</div>
+        </div>
+        <div class="step-content">
+            <div class="step-subtitle">(해당부점)</div>
+            <div class="step-description">
+                <p>공사는 등기소로부터 등기필증을 접수하여 매수자에게 교부합니다.</p>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<!-- =================== 푸터 =================== -->
+<div th:replace="~{layout/footer :: footer}"></div>
+
+</body>
+</html>

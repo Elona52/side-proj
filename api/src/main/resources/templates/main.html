@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kamco 공공경매 플랫폼</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Court Auction CSS -->
+    <link rel="stylesheet" th:href="@{/css/auction.css}">
+    <link rel="stylesheet" th:href="@{/css/kamco.css}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <style>
+        /* * { box-sizing: border-box; } - auction.css에서 관리 */
+        /* html, body 스타일은 auction.css에서 관리 */
+        
+        
+        .interest-section,
+        .info-cards-section {
+            max-width: 1400px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+        }
+        
+        .hero-section {
+            width: 100% !important;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-section::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(
+                to right,
+                rgba(0, 0, 0, 0.35) 0%,
+                rgba(0, 0, 0, 0.35) 20%,
+                rgba(0, 0, 0, 0) 35%,
+                rgba(0, 0, 0, 0) 80%,
+                rgba(0, 0, 0, 0.35) 100%
+            );
+            z-index: 2;
+        }
+
+        /* 50% 체감 카드 위성 지도 */
+        .interest-card {
+            overflow: hidden;
+        }
+
+        .interest-map {
+            width: 100%;
+            height: 210px;
+            background: #e0e0e0;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .interest-map iframe {
+            width: 100%;
+            height: calc(100% + 70px);
+            border: 0;
+            pointer-events: none;
+            transform: translateY(-35px);
+        }
+
+        .map-placeholder {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 14px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+        }
+    </style>
+</head>
+<body>
+
+
+<!-- =================== 헤더 =================== -->
+<div th:replace="~{layout/header :: header}"></div>
+
+<!-- =================== 히어로 섹션 (재디자인) =================== -->
+<section class="hero-section" style="position: relative; height: 400px; overflow: hidden; background: #000; width: 100%;">
+    <!-- 배경 이미지 슬라이더 -->
+    <div class="hero-slider" id="heroSlider" style="position: absolute; width: 100%; height: 100%; z-index: 1; top: 0; left: 0;">
+        <!-- 카테고리별 이미지 슬라이드 (영문 파일명 사용) -->
+        <div class="slide" data-category="주거용건물" style="background-image: url('/img/residential.png'); background-size: 100% 100%; background-position: center center; background-repeat: no-repeat; position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; transition: opacity 1s;"></div>
+        <div class="slide" data-category="자동차" style="background-image: url('/img/vehicle.png'); background-size: 100% 100%; background-position: center center; background-repeat: no-repeat; position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; transition: opacity 1s;"></div>
+        <div class="slide" data-category="상가용건물" style="background-image: url('/img/commercial.png'); background-size: 100% 100%; background-position: center center; background-repeat: no-repeat; position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; transition: opacity 1s;"></div>
+        <div class="slide" data-category="토지" style="background-image: url('/img/land.png'); background-size: 100% 100%; background-position: center center; background-repeat: no-repeat; position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 1; transition: opacity 1s;"></div>
+        <div class="slide" data-category="산업용건물" style="background-image: url('/img/industrial.png'); background-size: 100% 100%; background-position: center center; background-repeat: no-repeat; position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; transition: opacity 1s;"></div>
+        <div class="slide" data-category="임야" style="background-image: url('/img/forest.png'); background-size: 100% 100%; background-position: center center; background-repeat: no-repeat; position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; transition: opacity 1s;"></div>
+    </div>
+    
+    <!-- 컨텐츠 -->
+    <div style="position: relative; z-index: 3; max-width: 1400px; margin: 0 auto; padding: 40px; height: 100%; display: flex; align-items: center; justify-content: space-between;">
+        
+        <div style="color: #ffffff; max-width: 520px; text-shadow: 0 3px 8px rgba(0,0,0,0.7);">
+            <p style="font-size: 22px; font-weight: 800; margin: 0 0 14px 0;">
+                투명한 경매. 튼튼한 미래.
+            </p>
+            <h2 style="font-size: 52px; line-height: 1.2; font-weight: 800; margin: 0 0 18px 0;">
+                국민과 함께하는<br>
+                경매정보
+            </h2>
+            <p style="font-size: 15px; line-height: 1.8; margin: 0;">
+                부동산부터 동산까지, 다양한 공매 물건을 쉽고 편리하게 확인해 보세요.<br>
+                믿을 수 있는 정보와 편리한 검색 기능으로 여러분의 입찰을 도와드립니다.
+            </p>
+        </div>
+        
+        <table style="border-collapse: collapse; border: none; transform: scale(1.05);">
+            <tr>
+                <!-- 주거용건물 -->
+                <td style="padding: 0; margin: 0; border: 1px solid rgba(255,255,255,0.2);">
+                    <a class="category-btn" data-category="부동산 / 주거용건물" data-slide="주거용건물" onclick="showCategorySlide('주거용건물'); location.href='/auctionList?category=' + encodeURIComponent(this.getAttribute('data-category'))" style="background: rgba(0,0,0,0.8); padding: 15px 20px; cursor: pointer; transition: all 0.3s; text-decoration: none; display: flex; align-items: center; gap: 12px; width: 180px;">
+                        <i class="fas fa-home" style="font-size: 26px; color: #fff;"></i>
+                        <span style="color: #fff; font-size: 16px; font-weight: 700;">주거용건물</span>
+                    </a>
+                </td>
+                <!-- 자동차 -->
+                <td style="padding: 0; margin: 0; border: 1px solid rgba(255,255,255,0.2);">
+                    <a class="category-btn" data-category="부동산 / 자동차" data-slide="자동차" onclick="showCategorySlide('자동차'); location.href='/auctionList?category=' + encodeURIComponent(this.getAttribute('data-category'))" style="background: rgba(0,0,0,0.8); padding: 15px 20px; cursor: pointer; transition: all 0.3s; text-decoration: none; display: flex; align-items: center; gap: 12px; width: 180px;">
+                        <i class="fas fa-car" style="font-size: 26px; color: #fff;"></i>
+                        <span style="color: #fff; font-size: 16px; font-weight: 700;">자동차</span>
+                    </a>
+                </td>
+            </tr>
+            <tr>
+                <!-- 상가용건물 -->
+                <td style="padding: 0; margin: 0; border: 1px solid rgba(255,255,255,0.2);">
+                    <a class="category-btn" data-category="부동산 / 상가용건물" data-slide="상가용건물" onclick="showCategorySlide('상가용건물'); location.href='/auctionList?category=' + encodeURIComponent(this.getAttribute('data-category'))" style="background: rgba(0,0,0,0.8); padding: 15px 20px; cursor: pointer; transition: all 0.3s; text-decoration: none; display: flex; align-items: center; gap: 12px; width: 180px;">
+                        <i class="fas fa-store" style="font-size: 26px; color: #fff;"></i>
+                        <span style="color: #fff; font-size: 16px; font-weight: 700;">상가용건물</span>
+                    </a>
+                </td>
+                <!-- 토지 -->
+                <td style="padding: 0; margin: 0; border: 1px solid rgba(255,255,255,0.2);">
+                    <a class="category-btn active" data-category="부동산 / 토지" data-slide="토지" onclick="showCategorySlide('토지'); location.href='/auctionList?category=' + encodeURIComponent(this.getAttribute('data-category'))" style="background: #0066cc; padding: 15px 20px; cursor: pointer; transition: all 0.3s; text-decoration: none; display: flex; align-items: center; gap: 12px; width: 180px;">
+                        <i class="fas fa-map-marker-alt" style="font-size: 26px; color: #fff;"></i>
+                        <span style="color: #fff; font-size: 16px; font-weight: 700;">토지</span>
+                    </a>
+                </td>
+            </tr>
+            <tr>
+                <!-- 산업용건물 -->
+                <td style="padding: 0; margin: 0; border: 1px solid rgba(255,255,255,0.2);">
+                    <a class="category-btn" data-category="부동산 / 산업용건물" data-slide="산업용건물" onclick="showCategorySlide('산업용건물'); location.href='/auctionList?category=' + encodeURIComponent(this.getAttribute('data-category'))" style="background: rgba(0,0,0,0.8); padding: 15px 20px; cursor: pointer; transition: all 0.3s; text-decoration: none; display: flex; align-items: center; gap: 12px; width: 180px;">
+                        <i class="fas fa-industry" style="font-size: 26px; color: #fff;"></i>
+                        <span style="color: #fff; font-size: 16px; font-weight: 700;">산업용건물</span>
+                    </a>
+                </td>
+                <!-- 임야 -->
+                <td style="padding: 0; margin: 0; border: 1px solid rgba(255,255,255,0.2);">
+                    <a class="category-btn" data-category="부동산 / 임야" data-slide="임야" onclick="showCategorySlide('임야'); location.href='/auctionList?category=' + encodeURIComponent(this.getAttribute('data-category'))" style="background: rgba(0,0,0,0.8); padding: 15px 20px; cursor: pointer; transition: all 0.3s; text-decoration: none; display: flex; align-items: center; gap: 12px; width: 180px;">
+                        <i class="fas fa-mountain" style="font-size: 26px; color: #fff;"></i>
+                        <span style="color: #fff; font-size: 16px; font-weight: 700;">임야</span>
+                    </a>
+                </td>
+            </tr>
+        </table>
+    </div>
+    
+	<style>
+	.hero-section table a:hover {
+	    background: rgba(0,102,204,0.9) !important;
+	}
+	.hero-section table a.active {
+	    background: #0066cc !important;
+	}
+
+	/* 이미지 화질 개선 및 잘림 방지 */
+	.hero-slider .slide {
+	    image-rendering: -webkit-optimize-contrast;
+	    image-rendering: crisp-edges;
+	    image-rendering: high-quality;
+	    -ms-interpolation-mode: bicubic;
+	    backface-visibility: hidden;
+	    transform: translateZ(0);
+	    background-size: 100% 100% !important;
+
+	    /* 아래 두 줄 추가 */
+	    position: relative;
+	    overflow: hidden;
+	}
+
+	
+	</style>
+
+</section>
+
+<!-- =================== 연회색 배경 영역 시작 =================== -->
+<div style="background: #f5f5f5 !important; width: 100% !important;">
+
+<!-- =================== 메인 컨텐츠 (3단 레이아웃) =================== -->
+<main class="main-content">
+    
+    <!-- 왼쪽 칼럼: 로그인/공지사항 -->
+    <aside class="left-column">
+        <!-- 로그인 박스 -->
+        <div class="login-box" style="background: #fff; padding: 15px; padding-top: 58px; text-align: center; min-height: 250px; max-height: 250px; display: flex; flex-direction: column; justify-content: space-between; border-top: 2px solid #333;">
+            <th:block th:if="${session.isLogin == null}">
+                <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                    <a th:href="@{/memberLogin}" class="btn btn-login" style="flex: 1; padding: 12px; background: #52b788; color: #fff; font-weight: 700; text-decoration: none; display: inline-block; font-size: 20px;">로그인</a>
+                    <a th:href="@{/memberJoin}" class="btn btn-signup" style="flex: 1; padding: 12px; background: #e0e0e0; color: #333; text-decoration: none; display: inline-block; font-size: 20px; font-weight: 700;">회원가입</a>
+                </div>
+                <div style="display: flex; gap: 10px; font-size: 15px;">
+                    <button onclick="location.href='#'" style="flex: 1; padding: 8px; background: #f5f5f5; border: none; cursor: pointer; font-weight: 700;">아이디찾기</button>
+                    <button onclick="location.href='#'" style="flex: 1; padding: 8px; background: #f5f5f5; border: none; cursor: pointer; font-weight: 700;">비밀번호찾기</button>
+                </div>
+            </th:block>
+            <th:block th:if="${session.isLogin != null}">
+                <div style="padding: 10px 0;">
+                    <p style="font-size: 20px; font-weight: 700; margin-bottom: 10px;">
+                        <span th:text="${session.loginId}">사용자</span>님
+                    </p>
+                    <p style="font-size: 15px; color: #666; margin-bottom: 15px;">환영합니다!</p>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <a th:href="@{/myFavorites}" style="background: #004098; color: #fff; padding: 12px; text-decoration: none; display: inline-block; font-size: 15px;">내 즐겨찾기</a>
+                    </div>
+                </div>
+            </th:block>
+			<!-- 로그인 안 된 경우만 보여주기 -->
+			<th:block th:if="${session.isLogin == null}">
+			    <div style="margin-top: auto; padding-top: 15px; font-size: 16px; font-weight: 700; color: #777; cursor: pointer;"
+			         onclick="alert('즐겨찾기에 추가되었습니다!');">
+			        <span style="font-size: 20px; margin-right: 5px;">⭐</span>
+			        캠코사이트 즐겨찾기 추가
+			    </div>
+			</th:block>
+        </div>
+        
+        <!-- 공지사항 -->
+        <div class="notice-box" style="background: #fff; padding: 20px; min-height: 250px; max-height: 250px; display: flex; flex-direction: column; border-top: 2px solid #333;">
+            <div class="notice-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 12px;">
+                <h3 style="margin: 0; font-size: 19px; font-weight: 700;">신규물건 공지</h3>
+                <button onclick="location.href='/boardList'" style="background: none; border: none; color: #999; font-size: 20px; cursor: pointer;">▣</button>
+            </div>
+            <div id="noticeSlider" style="flex: 1; position: relative; overflow: hidden;">
+                <th:block th:if="${notices != null and !notices.isEmpty()}">
+                    <div class="notice-item" 
+                         th:each="notice, iterStat : ${notices}"
+                         th:data-cltr-no="${notice.cltrNo}"
+                         th:style="|position: absolute; width: 100%; opacity: ${iterStat.index == 0 ? '1' : '0'}; transition: opacity 0.5s; cursor: pointer; padding: 10px;|"
+                         onclick="location.href='/api-item-detail?cltrNo=' + this.getAttribute('data-cltr-no')">
+                        <div style="font-size: 17px; font-weight: 700; color: #333; line-height: 1.6; margin-bottom: 8px;" th:text="${notice.title}">신규물건 등 제목</div>
+                        <div style="font-size: 15px; font-weight: 700; color: #999;" th:text="${#temporals.format(notice.date, 'yyyy.MM.dd')}">2025.11.10</div>
+                    </div>
+                </th:block>
+                <div th:if="${notices == null or notices.isEmpty()}" style="text-align: center; color: #999; padding: 40px 20px; font-size: 14px;">
+                    신규물건이 없습니다.
+                </div>
+            </div>
+            <div th:if="${notices != null and !notices.isEmpty()}" style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 10px;">
+                <button onclick="prevNotice()" style="padding: 5px 10px; background: #f5f5f5; border: none; cursor: pointer; font-size: 14px;">&lt;</button>
+                <button onclick="nextNotice()" style="padding: 5px 10px; background: #f5f5f5; border: none; cursor: pointer; font-size: 14px;">&gt;</button>
+            </div>
+        </div>
+    </aside>
+    
+    <!-- 중앙 칼럼: 검색/용도별 물건 -->
+    <section class="center-column">
+        <!-- 빠른 검색 -->
+        <div class="search-box" style="background: #fff; padding: 20px; border-top: 2px solid #333; min-height: 250px; max-height: 250px; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-bottom: 10px;">
+                <h3 style="margin: 0; font-size: 19px; font-weight: 700;">빠른물건 검색</h3>
+                <span style="font-size: 14px; font-weight: 700; color: #666;">공고중인 지역만 검색 가능합니다.</span>
+            </div>
+            
+            <div style="display: flex; gap: 12px; margin-bottom: 10px;">
+                <label style="display: flex; align-items: center; gap: 5px; font-size: 16px; font-weight: 700; cursor: pointer;">
+                    <input type="radio" name="property-type" value="real-estate" checked style="width: 16px; height: 16px;">
+                    <span>✓부동산</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 5px; font-size: 16px; font-weight: 700; cursor: pointer;">
+                    <input type="radio" name="property-type" value="movable" style="width: 16px; height: 16px;">
+                    <span>동산</span>
+                </label>
+            </div>
+            
+            <form th:action="@{/auctionList}" method="get" style="display: grid; grid-template-columns: 1fr auto; gap: 8px;">
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                        <select name="sido" style="padding: 8px; border: none; font-size: 14px; background: #f5f5f5;">
+                            <option value="">시/도</option>
+                            <option value="서울특별시" selected>서울특별시</option>
+                        </select>
+                        <select name="district" style="padding: 8px; border: none; font-size: 14px; background: #f5f5f5;">
+                            <option value="">시/군/구</option>
+                            <option value="강남구">강남구</option>
+                            <option value="강동구">강동구</option>
+                            <option value="강북구">강북구</option>
+                            <option value="강서구">강서구</option>
+                        </select>
+                    </div>
+                    <input type="text" name="keyword" placeholder="동/도로명" style="padding: 8px; border: none; font-size: 14px; background: #f5f5f5;">
+                </div>
+                <button type="submit" style="background: #004098; color: #fff; padding: 0 30px; border: none; font-size: 17px; font-weight: 700; cursor: pointer; white-space: nowrap;">검색하기</button>
+            </form>
+            
+            <!-- 표 형태로 변경 (한 줄) -->
+            <table style="width: 100%; border-collapse: collapse; margin-top: auto; border: 1px solid #e0e0e0;">
+                <tr>
+                    <td onclick="location.href='/auctionList'" style="padding: 10px; cursor: pointer; text-align: center; font-size: 16px; font-weight: 700; color: #333; background: #fff; border-right: 1px solid #e0e0e0;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='#fff'">
+                        물건상세검색
+                    </td>
+                    <td onclick="alert('준비중입니다')" style="padding: 10px; cursor: pointer; text-align: center; font-size: 16px; font-weight: 700; color: #333; background: #fff; border-right: 1px solid #e0e0e0;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='#fff'">
+                        지도검색
+                    </td>
+                    <td onclick="alert('준비중입니다')" style="padding: 10px; cursor: pointer; text-align: center; font-size: 16px; font-weight: 700; color: #333; background: #fff; border-right: 1px solid #e0e0e0;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='#fff'">
+                        자동차 중기검색
+                    </td>
+                    <td onclick="alert('준비중입니다')" style="padding: 10px; cursor: pointer; text-align: center; font-size: 16px; font-weight: 700; color: #333; background: #fff;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='#fff'">
+                        경매사건검색
+                    </td>
+                </tr>
+            </table>
+        </div>
+        
+        <!-- 용도별 물건정보 (4x3 표 형태) -->
+        <div class="usage-box" style="background: #fff; padding: 20px; min-height: 250px; max-height: 250px; overflow: hidden; border-top: 2px solid #333;">
+            <div class="usage-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 12px;">
+                <h3 style="margin: 0; font-size: 19px; font-weight: 700;">용도별 물건정보</h3>
+                <button onclick="location.href='/auctionList'" style="background: none; border: none; color: #999; font-size: 20px; cursor: pointer;">▣</button>
+            </div>
+            <table style="width: 100%; border-collapse: collapse;">
+                <th:block th:if="${categoryStats != null and !categoryStats.isEmpty()}">
+                    <tr th:each="rowNum : ${#numbers.sequence(0, 2)}">
+                        <th:block th:each="colNum : ${#numbers.sequence(0, 3)}">
+                            <th:block th:with="index=${rowNum * 4 + colNum}">
+                                <td th:if="${index < categoryStats.size()}"
+                                    th:with="entry=${categoryStats.entrySet().toArray()[index]}"
+                                    th:data-category="${entry.key}"
+                                    onclick="location.href='/auctionList?category=' + encodeURIComponent(this.getAttribute('data-category'))"
+                                    style="padding: 12px 10px; cursor: pointer; text-align: center; font-size: 16px; font-weight: 700; color: #333; border: 1px solid #e0e0e0; background: #fff;"
+                                    onmouseover="this.style.background='#f5f5f5'"
+                                    onmouseout="this.style.background='#fff'">
+                                    <span th:text="${#strings.substringAfter(entry.key, ' / ')}">카테고리</span>
+                                </td>
+                                <td th:if="${index >= categoryStats.size()}" style="padding: 12px 10px; background: #fafafa; border: 1px solid #e0e0e0;"></td>
+                            </th:block>
+                        </th:block>
+                    </tr>
+                </th:block>
+                <tr th:if="${categoryStats == null or categoryStats.isEmpty()}">
+                    <td colspan="4" style="padding: 20px; text-align: center; color: #999; border: 1px solid #e0e0e0; background: #fff;">
+                        데이터를 불러오는 중입니다...
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </section>
+    
+    <!-- 오른쪽 칼럼: 경매일정/도우미 -->
+    <aside class="right-column">
+        <!-- 금주의 경매일정 -->
+        <div class="schedule-box" style="background: #fff; padding: 20px; min-height: 250px; max-height: 250px; display: flex; flex-direction: column; border-top: 2px solid #333;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin: 0; font-size: 19px; font-weight: 700;">금주의 경매일정</h3>
+                <button onclick="location.reload()" style="background: none; border: none; color: #999; font-size: 20px; cursor: pointer;">⟳</button>
+            </div>
+            
+            <div style="display: flex; gap: 8px; margin-bottom: 15px; padding-bottom: 10px;">
+                <button class="schedule-tab active" onclick="switchTab(this, 0)" style="flex: 1; padding: 8px; background: #f5f5f5; border: none; cursor: pointer; font-size: 16px; font-weight: 700;">공고</button>
+                <button class="schedule-tab" onclick="switchTab(this, 1)" style="flex: 1; padding: 8px; background: #fff; border: none; cursor: pointer; font-size: 16px; font-weight: 700;">정정</button>
+                <button class="schedule-tab" onclick="switchTab(this, 2)" style="flex: 1; padding: 8px; background: #fff; border: none; cursor: pointer; font-size: 16px; font-weight: 700;">취하취소</button>
+            </div>
+            
+            <div class="schedule-list" style="flex: 1; overflow-y: auto;">
+                <th:block th:if="${scheduleList != null and !scheduleList.isEmpty()}">
+                    <div th:each="schedule : ${scheduleList}"
+                         th:data-cltr-no="${schedule.cltrNo}"
+                         onclick="location.href='/api-item-detail?cltrNo=' + this.getAttribute('data-cltr-no')"
+                         style="padding: 12px 0; cursor: pointer; display: flex; justify-content: space-between; align-items: center;"
+                         onmouseover="this.style.background='#f9f9f9'"
+                         onmouseout="this.style.background='transparent'">
+                        <span th:text="${schedule.region}" style="font-size: 17px; color: #333; font-weight: 700; flex: 1; margin-right: 10px; line-height: 1.3; word-break: keep-all;">강남</span>
+                        <div style="text-align: right;">
+                            <span th:if="${schedule.pbctClsDtm != null and #strings.length(schedule.pbctClsDtm) >= 8}"
+                                  th:text="${#strings.substring(schedule.pbctClsDtm, 4, 6) + '.' + #strings.substring(schedule.pbctClsDtm, 6, 8)}"
+                                  style="font-size: 17px; color: #d32f2f; font-weight: 700; margin-right: 5px;">11.11</span>
+                            <span style="font-size: 15px; font-weight: 700; color: #999;">(기일)</span>
+                        </div>
+                    </div>
+                </th:block>
+                <th:block th:unless="${scheduleList != null and !scheduleList.isEmpty()}">
+                    <div style="text-align: center; color: #999; padding: 40px 20px; font-size: 14px;">
+                        오늘 마감하는 경매 일정이 없습니다.
+                    </div>
+                </th:block>
+            </div>
+        </div>
+        
+        <!-- 경매도우미 -->
+        <div class="helper-box" style="background: #fff; padding: 20px; min-height: 250px; max-height: 250px; display: flex; flex-direction: column; border-top: 2px solid #333;">
+            <h3 style="margin: 0 0 15px 0; font-size: 19px; font-weight: 700; padding-bottom: 12px;">경매도우미</h3>
+            
+            <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+                <input type="text" placeholder="검색어 입력" style="flex: 1; padding: 10px; border: none; font-size: 14px; background: #f5f5f5;">
+                <button style="padding: 10px 20px; background: #004098; color: #fff; border: none; cursor: pointer; font-size: 17px; font-weight: 700;">Q</button>
+            </div>
+            
+            <div style="font-size: 15px; font-weight: 700; color: #777; line-height: 1.8;">
+                <strong style="display: block; margin-bottom: 8px; color: #333; font-size: 16px;">예시</strong>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    <span style="padding: 5px 9px; background: #f5f5f5; border: none; cursor: pointer; font-size: 15px; font-weight: 700;" onclick="alert('검색 기능 준비중')">매각기일</span>
+                    <span style="padding: 5px 10px; background: #f5f5f5; border: none; cursor: pointer; font-size: 15px; font-weight: 700;" onclick="alert('검색 기능 준비중')">소유권</span>
+                    <span style="padding: 5px 10px; background: #f5f5f5; border: none; cursor: pointer; font-size: 15px; font-weight: 700;" onclick="alert('검색 기능 준비중')">분할채권</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+    
+</main>
+
+</div>
+<!-- =================== 연회색 배경 영역 끝 =================== -->
+
+<!-- =================== 흰색 배경 영역 시작 =================== -->
+<div style="background: #fff !important; width: 100% !important;">
+
+<!-- =================== 50% 체감 물건 섹션 =================== -->
+<section class="interest-section" style="padding-top: 50px; margin-top: 0;">
+    <div class="section-header">
+        <h3 style="font-size: 24px; font-weight: 700;">50% 체감 물건 (저가 낙찰 기회)</h3>
+        <a th:href="@{/discount-50}" class="btn" style="padding: 10px 24px; background: var(--court-blue); color: #fff; text-decoration: none; border-radius: 0; font-size: 16px; font-weight: 700;">더보기 +</a>
+    </div>
+    
+    <div class="interest-grid" style="grid-template-columns: repeat(4, 1fr) !important;">
+        <th:block th:if="${discountList != null and !discountList.isEmpty()}">
+            <div class="interest-card" th:each="item : ${discountList}" style="cursor: pointer;">
+                <a th:if="${item.apiItem}" 
+                   th:href="@{/api-item-detail(cltrNo=${item.cltrNo})}" 
+                   style="text-decoration: none; color: inherit; display: block;">
+                    <div class="interest-map" th:attr="data-address=${item.name != null ? item.name : ''}"></div>
+                    <div class="interest-info" style="padding: 18px;">
+                        <div class="interest-address" th:text="${item.name}" style="font-size: 17px; font-weight: 700; line-height: 1.4; margin-bottom: 14px;">서울특별시 강남구 역삼동</div>
+                        <div class="interest-price">
+                            <div class="price-row">
+                                <span class="price-btn price-btn-min">최저</span>
+                                <span class="price-value" th:text="${#numbers.formatInteger(item.startPrice, 3, 'COMMA')} + ' 원'">398,080,000 원</span>
+                            </div>
+                            <div class="price-row">
+                                <span class="price-btn price-btn-appraisal">감정</span>
+                                <span class="price-value" th:text="${item.endPrice > 0 ? #numbers.formatInteger(item.endPrice, 3, 'COMMA') + ' 원' : '-'}">622,000,000 원</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                <a th:unless="${item.apiItem}" 
+                   th:href="@{/detail(no=${item.no})}" 
+                   style="text-decoration: none; color: inherit; display: block;">
+                    <div class="interest-map" th:attr="data-address=${item.name != null ? item.name : ''}"></div>
+                    <div class="interest-info" style="padding: 18px;">
+                        <div class="interest-address" th:text="${item.name}" style="font-size: 17px; font-weight: 700; line-height: 1.4; margin-bottom: 14px;">서울특별시 강남구 역삼동</div>
+                        <div class="interest-price">
+                            <div class="price-row">
+                                <span class="price-btn price-btn-min">최저</span>
+                                <span class="price-value" th:text="${#numbers.formatInteger(item.startPrice, 3, 'COMMA')} + ' 원'">398,080,000 원</span>
+                            </div>
+                            <div class="price-row">
+                                <span class="price-btn price-btn-appraisal">감정</span>
+                                <span class="price-value" th:text="${item.endPrice > 0 ? #numbers.formatInteger(item.endPrice, 3, 'COMMA') + ' 원' : '-'}">622,000,000 원</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </th:block>
+        <th:block th:unless="${discountList != null and !discountList.isEmpty()}">
+            <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: #999; font-size: 16px;">
+                현재 등록된 50% 체감 물건이 없습니다.
+            </div>
+        </th:block>
+    </div>
+</section>
+
+<!-- =================== 추가 정보 섹션 =================== -->
+<section class="info-cards-section">
+    
+    <!-- 경매절차 -->
+    <div class="info-card">
+        <h3>경매절차</h3>
+        <ul>
+            <li><a href="/information">부동산경매절차</a></li>
+            <li><a href="/information">동산경매절차</a></li>
+            <li><a href="/information">경매비용</a></li>
+            <li><a href="/information">매수신청대리안내</a></li>
+        </ul>
+    </div>
+    
+    <!-- 관련법률 -->
+    <div class="info-card">
+        <h3>낙찰후 절차</h3>
+        <ul>
+            <li><a href="/information">국유자산 낙찰후 절차</a></li>
+            <li><a href="/information">수탁재산 낙찰 후 절차</a></li>
+        </ul>
+    </div>
+    
+</section>
+
+</div>
+<!-- =================== 흰색 배경 영역 끝 =================== -->
+
+<!-- =================== 푸터 =================== -->
+<div th:replace="~{layout/footer :: footer}"></div>
+
+<!-- JavaScript -->
+<script>
+console.log('메인 페이지 로드 완료');
+
+// 위성 지도 프리뷰 렌더링
+document.addEventListener('DOMContentLoaded', function() {
+    const mapContainers = document.querySelectorAll('.interest-map');
+    mapContainers.forEach(container => {
+        const address = container.getAttribute('data-address');
+        if (!address || address.trim() === '') {
+            const placeholder = document.createElement('div');
+            placeholder.className = 'map-placeholder';
+            placeholder.textContent = '주소 정보가 없습니다.';
+            container.appendChild(placeholder);
+            return;
+        }
+
+        const iframe = document.createElement('iframe');
+        iframe.setAttribute('loading', 'lazy');
+        iframe.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
+        iframe.src = `https://maps.google.com/maps?q=${encodeURIComponent(address)}&output=embed&t=k&z=19`;
+        container.appendChild(iframe);
+    });
+});
+
+// 히어로 섹션 카테고리 슬라이드
+(function() {
+    // DOM이 완전히 로드된 후 실행
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initHeroSlider);
+    } else {
+        initHeroSlider();
+    }
+    
+    function initHeroSlider() {
+        const slides = document.querySelectorAll('.hero-slider .slide[data-category]');
+        const categoryButtons = document.querySelectorAll('.category-btn');
+        const categories = ['주거용건물', '자동차', '상가용건물', '토지', '산업용건물', '임야'];
+        let currentIndex = 3; // 토지부터 시작 (active 클래스가 있는 버튼)
+        let autoSlideInterval;
+        
+        console.log('히어로 슬라이드 초기화 - 슬라이드 개수: ' + slides.length + ', 버튼 개수: ' + categoryButtons.length);
+        
+        // 이미지가 이미 HTML에 설정되어 있으므로 추가 로드 불필요
+        // 다만 이미지 로드 확인을 위해 체크
+        slides.forEach((slide, index) => {
+            const imagePath = slide.getAttribute('data-image');
+            const bgImage = slide.style.backgroundImage;
+            console.log('슬라이드 이미지 확인:', slide.getAttribute('data-category'), '->', bgImage);
+            
+            // 이미지가 로드되지 않은 경우에만 재시도
+            if (!bgImage || bgImage === 'none' || bgImage === '') {
+                if (imagePath) {
+                    slide.style.backgroundImage = 'url(' + imagePath + ')';
+                    console.log('이미지 경로 재설정:', imagePath);
+                }
+            }
+        });
+        
+        // 카테고리명을 영문 코드로 매핑
+        const categoryCodeMap = {
+            '주거용건물': 'residential',
+            '자동차': 'vehicle',
+            '상가용건물': 'commercial',
+            '토지': 'land',
+            '산업용건물': 'industrial',
+            '임야': 'forest'
+        };
+        
+        // 카테고리별 슬라이드 표시 함수
+        window.showCategorySlide = function(categoryName) {
+            console.log('슬라이드 전환:', categoryName);
+            
+            // 모든 슬라이드 숨기기
+            slides.forEach(slide => {
+                slide.style.opacity = '0';
+            });
+            
+            // 해당 카테고리 슬라이드 표시
+            const targetSlide = document.querySelector(`.hero-slider .slide[data-category="${categoryName}"]`);
+            if (targetSlide) {
+                targetSlide.style.opacity = '1';
+                console.log('슬라이드 표시 성공:', categoryName);
+            } else {
+                console.error('슬라이드를 찾을 수 없음:', categoryName);
+            }
+            
+            // 버튼 활성화 상태 업데이트
+            categoryButtons.forEach(btn => {
+                if (btn.getAttribute('data-slide') === categoryName) {
+                    btn.classList.add('active');
+                    btn.style.background = '#0066cc';
+                } else {
+                    btn.classList.remove('active');
+                    btn.style.background = 'rgba(0,0,0,0.8)';
+                }
+            });
+            
+            // 현재 인덱스 업데이트
+            currentIndex = categories.indexOf(categoryName);
+            if (currentIndex === -1) currentIndex = 0;
+            
+            // 자동 슬라이드 재시작
+            restartAutoSlide();
+        };
+        
+        // 자동 슬라이드 함수
+        function nextSlide() {
+            currentIndex = (currentIndex + 1) % categories.length;
+            showCategorySlide(categories[currentIndex]);
+        }
+        
+        // 자동 슬라이드 시작
+        function startAutoSlide() {
+            if (autoSlideInterval) {
+                clearInterval(autoSlideInterval);
+            }
+            autoSlideInterval = setInterval(nextSlide, 4000); // 4초마다 전환
+        }
+        
+        // 자동 슬라이드 재시작
+        function restartAutoSlide() {
+            if (autoSlideInterval) {
+                clearInterval(autoSlideInterval);
+            }
+            startAutoSlide();
+        }
+        
+        // 버튼 호버 시 자동 슬라이드 일시 정지
+        categoryButtons.forEach(btn => {
+            btn.addEventListener('mouseenter', function() {
+                if (autoSlideInterval) {
+                    clearInterval(autoSlideInterval);
+                }
+            });
+            
+            btn.addEventListener('mouseleave', function() {
+                startAutoSlide();
+            });
+        });
+        
+        // 초기 자동 슬라이드 시작
+        startAutoSlide();
+        
+        console.log('히어로 카테고리 슬라이드 시작 완료');
+    }
+})();
+
+// 공지사항 슬라이드
+let noticeCurrentIndex = 0;
+const noticeItems = document.querySelectorAll('#noticeSlider .notice-item');
+
+function showNotice(index) {
+    noticeItems.forEach((item, i) => {
+        item.style.opacity = i === index ? '1' : '0';
+    });
+}
+
+function nextNotice() {
+    if (noticeItems.length === 0) return;
+    noticeCurrentIndex = (noticeCurrentIndex + 1) % noticeItems.length;
+    showNotice(noticeCurrentIndex);
+}
+
+function prevNotice() {
+    if (noticeItems.length === 0) return;
+    noticeCurrentIndex = (noticeCurrentIndex - 1 + noticeItems.length) % noticeItems.length;
+    showNotice(noticeCurrentIndex);
+}
+
+if (noticeItems.length > 0) {
+    console.log('공지사항 슬라이드 시작: ' + noticeItems.length + '개');
+}
+
+// 경매일정 탭 전환
+function switchTab(button, tabIndex) {
+    // 모든 탭 버튼 스타일 초기화
+    const tabs = document.querySelectorAll('.schedule-tab');
+    tabs.forEach(tab => {
+        tab.style.background = '#fff';
+        tab.style.fontWeight = 'normal';
+    });
+    
+    // 선택된 탭 활성화
+    button.style.background = '#f5f5f5';
+    button.style.fontWeight = '600';
+    
+    // 탭에 따라 메시지 표시 (실제로는 다른 데이터를 로드할 수 있음)
+    if (tabIndex === 1 || tabIndex === 2) {
+        const scheduleList = document.querySelector('.schedule-list');
+        if (scheduleList && !scheduleList.querySelector('.no-data-tab')) {
+            const originalContent = scheduleList.innerHTML;
+            scheduleList.setAttribute('data-original', originalContent);
+            scheduleList.innerHTML = '<div class="no-data-tab" style="text-align: center; color: #999; padding: 40px 20px; font-size: 13px;">해당 정보가 없습니다.</div>';
+        }
+    } else if (tabIndex === 0) {
+        const scheduleList = document.querySelector('.schedule-list');
+        const originalContent = scheduleList.getAttribute('data-original');
+        if (originalContent) {
+            scheduleList.innerHTML = originalContent;
+        }
+    }
+}
+</script>
+
+</body>
+</html>
+

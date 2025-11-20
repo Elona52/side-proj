@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>수탁재산, 유입·유동화자산 낙찰 후 절차 안내 - 경매정보</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/auction.css}">
+    <link rel="stylesheet" th:href="@{/css/kamco.css}">
+    
+    <style>
+        :root {
+            --court-blue: #004098;
+            --border-gray: #ddd;
+            --bg-light: #f5f5f5;
+            --text-dark: #222;
+            --text-gray: #777;
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            font-family: 'Nanum Gothic', 'Malgun Gothic', sans-serif;
+            background: #f5f5f5;
+        }
+
+        /* 헤더 */
+
+        /* 메인 컨텐츠 */
+        .procedure-container {
+            max-width: 1200px;
+            margin: 30px auto 60px auto;
+            padding: 0 20px;
+        }
+
+        .breadcrumb {
+            font-size: 13px;
+            color: var(--text-gray);
+            margin-bottom: 20px;
+        }
+
+        .breadcrumb a {
+            color: var(--text-gray);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover { color: var(--court-blue); }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 800;
+            margin: 0 0 30px 0;
+            color: var(--text-dark);
+            border-bottom: 3px solid var(--court-blue);
+            padding-bottom: 15px;
+        }
+
+        /* STEP 섹션 */
+        .step-section {
+            margin-bottom: 50px;
+            background: #fff;
+            border: 1px solid var(--border-gray);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .step-header {
+            background: var(--court-blue);
+            color: #fff;
+            padding: 20px 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .step-number {
+            font-size: 24px;
+            font-weight: 800;
+            background: rgba(255,255,255,0.2);
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .step-title {
+            font-size: 20px;
+            font-weight: 700;
+            flex: 1;
+        }
+
+        .step-content {
+            padding: 30px;
+        }
+
+        .step-subtitle {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--court-blue);
+            margin-bottom: 15px;
+        }
+
+        .step-description {
+            font-size: 14px;
+            line-height: 1.8;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+        }
+
+        .step-description ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .step-description li {
+            margin-bottom: 8px;
+        }
+
+        /* 표 스타일 */
+        .document-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        .document-table th,
+        .document-table td {
+            border: 1px solid var(--border-gray);
+            padding: 12px;
+            text-align: left;
+        }
+
+        .document-table th {
+            background: var(--bg-light);
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .document-table td {
+            color: var(--text-dark);
+        }
+
+        .document-table tr:nth-child(even) {
+            background: #fafafa;
+        }
+
+        /* 주의사항 박스 */
+        .notice-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px 20px;
+            margin: 20px 0;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+
+        .notice-box strong {
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<!-- =================== 헤더 =================== -->
+<div th:replace="~{layout/header :: header}"></div>
+
+<main class="procedure-container">
+    <div class="breadcrumb">
+        <a href="/">▲ HOME</a> &gt;
+        <a th:href="@{/information}">이용안내</a> &gt;
+        <span>수탁재산, 유입·유동화자산 낙찰 후 절차 안내</span>
+    </div>
+
+    <h1 class="page-title">수탁재산, 유입·유동화자산 낙찰 후 절차 안내</h1>
+
+    <!-- STEP.01 -->
+    <div class="step-section">
+        <div class="step-header">
+            <div class="step-number">01</div>
+            <div class="step-title">매각계약체결</div>
+        </div>
+        <div class="step-content">
+            <div class="step-subtitle">(해당부점)</div>
+            <div class="step-description">
+                <p>낙찰자는 낙찰일부터 <strong>5일(공휴일 포함) 이내</strong>에 매매계약을 체결합니다.</p>
+                
+                <p style="margin-top: 20px;"><strong>지참서류:</strong></p>
+                <table class="document-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 30%;">구분</th>
+                            <th>지참서류</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>개인인 경우</strong></td>
+                            <td>주민등록초본 또는 등본 1통 및 신분증, 도장</td>
+                        </tr>
+                        <tr>
+                            <td><strong>법인인 경우</strong></td>
+                            <td>법인등기부등본(등기사항전부증명서), 법인인감증명서, 사업자등록증사본, 도장</td>
+                        </tr>
+                        <tr>
+                            <td><strong>대리인 방문시</strong></td>
+                            <td>인감증명서를 첨부한 위임장 및 신분증 지참</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="notice-box">
+                <strong>※ 우편으로 계약 체결 가능</strong><br>
+                우편으로 계약 체결(방문 불요)이 가능합니다.
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP.02 -->
+    <div class="step-section">
+        <div class="step-header">
+            <div class="step-number">02</div>
+            <div class="step-title">중도금 및 잔대금 납부</div>
+        </div>
+        <div class="step-content">
+            <div class="step-subtitle">(납부계좌지정)</div>
+            <div class="step-description">
+                <p>매매계약 체결한 매매계약서에 명시된 납부기일까지 중도금 및 잔대금 납부계좌로 입금을 합니다.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- STEP.03 -->
+    <div class="step-section">
+        <div class="step-header">
+            <div class="step-number">03</div>
+            <div class="step-title">소유권이전 관련 서류수령</div>
+        </div>
+        <div class="step-content">
+            <div class="step-subtitle">(해당부점)</div>
+            <div class="step-description">
+                <p>소유권 이전에 필요한 서류(매도용인감증명, 등기권리증, 위임장 등)는 위임기관에 직접방문하여 수령한 후 소유권이전등기신청</p>
+                <p style="margin-top: 15px;">※ 대리인이 방문할 경우 인감증명서를 첨부한 위임장 및 신분증 지참</p>
+            </div>
+            
+            <div class="notice-box">
+                <strong>※ 안내사항</strong><br>
+                소유권이전 관련 자세한 사항은 매도기관에 문의하시기 바랍니다.
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<!-- =================== 푸터 =================== -->
+<div th:replace="~{layout/footer :: footer}"></div>
+
+</body>
+</html>

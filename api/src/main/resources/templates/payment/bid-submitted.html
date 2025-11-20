@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>입찰서 제출 완료 - 나의경매</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Court Auction CSS -->
+    <link rel="stylesheet" th:href="@{/css/auction.css}">
+    <link rel="stylesheet" th:href="@{/css/kamco.css}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <style>
+        :root {
+            --court-blue: #004098;
+            --court-navy: #002855;
+            --border-gray: #ddd;
+            --bg-light: #f5f5f5;
+            --text-dark: #333;
+            --text-gray: #777;
+        }
+
+        /* ========== 메인 레이아웃 ========== */
+        .board-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            display: flex;
+            gap: 30px;
+        }
+
+        .side-menu {
+            width: 250px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 0;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .side-menu-header {
+            background: var(--court-blue);
+            color: #fff;
+            padding: 15px 20px;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .side-menu-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .side-menu-item {
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .side-menu-item a {
+            display: block;
+            padding: 14px 20px;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .side-menu-item a:hover {
+            background: #f8f9fa;
+            color: var(--court-blue);
+            padding-left: 25px;
+        }
+
+        .side-menu-item.active a {
+            background: var(--court-blue);
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .main-content {
+            flex: 1;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 0;
+        }
+
+        .content-section {
+            padding: 30px 40px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--court-blue);
+        }
+
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .info-table tr {
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .info-table td {
+            padding: 15px 0;
+            font-size: 14px;
+        }
+
+        .info-label {
+            width: 150px;
+            color: var(--text-gray);
+            font-weight: 600;
+        }
+
+        .info-value {
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        .info-value.highlight {
+            color: var(--court-blue);
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .success-message-box {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .success-icon {
+            font-size: 60px;
+            color: #28a745;
+            margin-bottom: 15px;
+        }
+
+        .success-message {
+            font-size: 22px;
+            font-weight: 700;
+            color: #155724;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            color: #fff;
+        }
+
+        .btn-primary {
+            background: var(--court-blue);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--court-navy);
+            color: #fff;
+        }
+
+        .virtual-account-box {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .virtual-account-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .virtual-account-number {
+            font-size: 20px;
+            font-weight: 700;
+            color: #dc3545;
+            margin-bottom: 5px;
+        }
+
+        .virtual-account-holder {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .payment-deadline {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .deadline-label {
+            font-size: 14px;
+            color: #721c24;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .deadline-date {
+            font-size: 18px;
+            font-weight: 700;
+            color: #dc3545;
+        }
+
+        .deadline-warning {
+            font-size: 12px;
+            color: #721c24;
+            margin-top: 10px;
+            line-height: 1.6;
+        }
+
+        .collapsible-section {
+            margin-top: 20px;
+        }
+
+        .collapsible-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .collapsible-header:hover {
+            background: #e9ecef;
+        }
+
+        .collapsible-header.active {
+            background: #e7f3ff;
+            border-color: #007bff;
+        }
+
+        .collapsible-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .collapsible-icon {
+            font-size: 12px;
+            color: #666;
+            transition: transform 0.3s;
+        }
+
+        .collapsible-header.active .collapsible-icon {
+            transform: rotate(180deg);
+        }
+
+        .collapsible-content {
+            display: none;
+            padding: 20px;
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+        }
+
+        .collapsible-content.active {
+            display: block;
+        }
+
+        .view-detail-btn {
+            display: inline-block;
+            padding: 6px 12px;
+            background: #007bff;
+            color: #fff;
+            border-radius: 4px;
+            font-size: 12px;
+            text-decoration: none;
+            margin-left: 10px;
+        }
+
+        .view-detail-btn:hover {
+            background: #0056b3;
+            color: #fff;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- 헤더 -->
+    <div th:replace="~{layout/header :: header}"></div>
+
+    <!-- 메인 컨텐츠 -->
+    <main class="board-container">
+        <!-- 좌측 네비 -->
+        <aside class="side-menu">
+            <div class="side-menu-header">• 나의경매</div>
+            <ul class="side-menu-list">
+                <li class="side-menu-item">
+                    <a th:href="@{/myFavorites}">
+                        <i class="fas fa-star"></i> 즐겨찾기
+                    </a>
+                </li>
+                <li class="side-menu-item active">
+                    <a th:href="@{/payment/my-payments}">
+                        <i class="fas fa-shopping-cart"></i> 구매내역
+                    </a>
+                </li>
+                <li class="side-menu-item">
+                    <a th:href="@{/price-alerts}">
+                        <i class="fas fa-bell"></i> 가격 알림
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- 메인 컨텐츠 영역 -->
+        <section class="main-content">
+            <div class="content-section">
+                <!-- 성공 메시지 -->
+                <div class="success-message-box">
+                    <div class="success-icon">✓</div>
+                    <div class="success-message">입찰서가 제출되었습니다.</div>
+                </div>
+
+                <!-- 입찰물건 정보 -->
+                <div class="content-section" style="padding-top: 0;">
+                    <h2 class="section-title">입찰물건 정보</h2>
+                    <table class="info-table" th:if="${auction != null}">
+                        <tr>
+                            <td class="info-label">물건명</td>
+                            <td class="info-value">
+                                <span th:text="${auction.name}">물건명</span>
+                                <a th:href="@{/auction/api-detail(cltrNo=${auction.cltrNo})}" class="view-detail-btn">물건상세 보기</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">물건관리번호</td>
+                            <td class="info-value" th:text="${auction != null and auction.cltrNo != null ? auction.cltrNo : '-'}">-</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">주소</td>
+                            <td class="info-value">
+                                <!-- KamcoItem에서 주소 가져오기 -->
+                                <div th:if="${kamcoItem != null}">
+                                    <div th:if="${kamcoItem.ldnmAdrs != null}">지번: <span th:text="${kamcoItem.ldnmAdrs}">지번주소</span></div>
+                                    <div th:if="${kamcoItem.nmrdAdrs != null}">도로명: <span th:text="${kamcoItem.nmrdAdrs}">도로명주소</span></div>
+                                    <div th:if="${kamcoItem.ldnmAdrs == null and kamcoItem.nmrdAdrs == null and kamcoItem.cltrNm != null}" th:text="${kamcoItem.cltrNm}">주소 정보 없음</div>
+                                </div>
+                                <!-- Auction에서 주소 가져오기 (DB 경매인 경우) -->
+                                <div th:if="${kamcoItem == null and auction != null and auction.name != null}" th:text="${auction.name}">주소 정보 없음</div>
+                                <div th:if="${kamcoItem == null and auction == null}">주소 정보 없음</div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- 입찰서 제출 정보 -->
+                <div class="content-section" style="padding-top: 0;">
+                    <h2 class="section-title">입찰서 제출 정보</h2>
+                    <table class="info-table">
+                        <tr>
+                            <td class="info-label">물건관리번호</td>
+                            <td class="info-value" th:text="${kamcoItem != null and kamcoItem.cltrMnmtNo != null ? kamcoItem.cltrMnmtNo : (auction != null and auction.cltrNo != null ? auction.cltrNo : '-')}">-</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">처분방식</td>
+                            <td class="info-value" th:text="${kamcoItem != null and kamcoItem.dpslMtdNm != null ? kamcoItem.dpslMtdNm : '-'}">-</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">입찰방식</td>
+                            <td class="info-value" th:text="${kamcoItem != null and kamcoItem.bidMtdNm != null ? kamcoItem.bidMtdNm : (bidMethod != null ? (bidMethod == 'self' ? '본인입찰' : '대리입찰') : '-')}">-</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">진행상태</td>
+                            <td class="info-value" th:text="${kamcoItem != null and kamcoItem.pbctCltrStatNm != null ? kamcoItem.pbctCltrStatNm : '-'}">-</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">개찰결과</td>
+                            <td class="info-value">-</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">진행완료일시</td>
+                            <td class="info-value" th:if="${kamcoItem != null and kamcoItem.pbctClsDtm != null}"
+                                th:with="dateStr=${kamcoItem.pbctClsDtm.replaceAll('[^0-9]', '')}"
+                                th:text="${dateStr.length() >= 14 ? (dateStr.substring(0,4) + '-' + dateStr.substring(4,6) + '-' + dateStr.substring(6,8) + ' ' + dateStr.substring(8,10) + ':' + dateStr.substring(10,12)) : kamcoItem.pbctClsDtm}">-</td>
+                            <td class="info-value" th:if="${kamcoItem == null or kamcoItem.pbctClsDtm == null}">-</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">입찰서제출일시</td>
+                            <td class="info-value" th:text="${payment != null and payment.createdDate != null ? #dates.format(payment.createdDate, 'yyyy-MM-dd HH:mm:ss') : #dates.format(#dates.createNow(), 'yyyy-MM-dd HH:mm:ss')}">2020-11-09 16:47:01</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- 입찰금액 및 보증금 납부 안내 -->
+                <div class="content-section" style="padding-top: 0;">
+                    <h2 class="section-title">입찰금액 및 보증금 납부 안내</h2>
+                    <table class="info-table">
+                        <tr>
+                            <td class="info-label">입찰금액</td>
+                            <td class="info-value highlight" th:text="${bidAmount != null ? (#numbers.formatInteger(bidAmount, 3, 'COMMA') + ' 원') : (auction != null ? (#numbers.formatInteger(auction.endPrice > 0 ? auction.endPrice : auction.startPrice, 3, 'COMMA') + ' 원') : '-')}">218,000,000 원</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">입찰보증금액</td>
+                            <td class="info-value highlight" th:text="${depositAmount != null ? (#numbers.formatInteger(depositAmount, 3, 'COMMA') + ' 원') : '-'}">10,900,000 원</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">참가수수료 포함 납부총액</td>
+                            <td class="info-value highlight" th:text="${depositAmount != null ? (#numbers.formatInteger(depositAmount, 3, 'COMMA') + ' 원 (보증금액 : ' + #numbers.formatInteger(depositAmount, 3, 'COMMA') + ' 원 / 참가수수료 : 0 원)') : '-'}">10,900,000 원 (보증금액 : 10,900,000 원 / 참가수수료 : 0 원)</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">입찰서 제출시간</td>
+                            <td class="info-value" th:text="${payment != null and payment.createdDate != null ? #dates.format(payment.createdDate, 'yyyy-MM-dd HH:mm:ss') : #dates.format(#dates.createNow(), 'yyyy-MM-dd HH:mm:ss')}">2020-11-09 16:47:01</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">입찰방법</td>
+                            <td class="info-value" th:text="${bidMethod != null ? (bidMethod == 'self' ? '본인입찰' : '대리입찰') : '본인입찰'}">본인입찰</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- 입찰자 정보 -->
+                <div class="content-section" style="padding-top: 0;">
+                    <h2 class="section-title">입찰자 정보</h2>
+                    <table class="info-table">
+                        <tr>
+                            <td class="info-label">입찰방법</td>
+                            <td class="info-value" th:text="${bidMethod != null ? (bidMethod == 'self' ? '본인입찰' : '대리입찰') : '본인입찰'}">본인입찰</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">입찰보증금 납부방식</td>
+                            <td class="info-value" th:text="${payment != null and payment.paymentMethod != null ? payment.paymentMethod : '현금'}">현금</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">이름</td>
+                            <td class="info-value" th:text="${buyerName != null ? buyerName : (member != null ? member.name : '-')}">입찰자19</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">주소</td>
+                            <td class="info-value">
+                                <div th:if="${member != null and member.address1 != null}">
+                                    <div>지번: <span th:text="${member.address1}">지번주소</span></div>
+                                    <div th:if="${member.address2 != null}">도로명: <span th:text="${member.address2}">도로명주소</span></div>
+                                </div>
+                                <div th:if="${member == null or member.address1 == null}">-</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">휴대폰</td>
+                            <td class="info-value" th:text="${buyerPhone != null ? buyerPhone : (member != null ? member.phone : '-')}">010-0000-0000</td>
+                        </tr>
+                        <tr>
+                            <td class="info-label">이메일</td>
+                            <td class="info-value" th:text="${buyerEmail != null ? buyerEmail : (member != null ? member.mail : '-')}">aa@gmail.com</td>
+                        </tr>
+                    </table>
+                    
+                    <!-- 가상계좌번호 -->
+                    <div class="virtual-account-box" th:if="${payment != null and payment.merchantUid != null}"
+                         th:with="bankName=${selectedBank != null ? (selectedBank == 'shinhan' ? '신한은행' : (selectedBank == 'busan' ? '부산은행' : (selectedBank == 'woori' ? '우리은행' : (selectedBank == 'ibk' ? '기업은행' : (selectedBank == 'hana' ? '하나은행' : '은행'))))) : '은행'}, accountHolder=${buyerName != null ? buyerName : (member != null ? member.name : '입찰자')}">
+                        <div class="virtual-account-label">가상계좌번호</div>
+                        <div class="virtual-account-number" th:text="${bankName} + ' ' + ${payment.merchantUid}">부산은행 6924070004025</div>
+                        <div class="virtual-account-holder" th:text="'예금주: ' + ${bankName} + '(' + ${accountHolder} + ')'">예금주: 부산은행(입찰자19)</div>
+                    </div>
+                    
+                    <!-- 납부기한 -->
+                    <div class="payment-deadline" th:if="${auction != null and auction.endDate != null}">
+                        <div class="deadline-label">납부기한</div>
+                        <div class="deadline-date" th:text="${#dates.format(auction.endDate, 'yyyy-MM-dd HH:mm')}">2020-11-13 16:00</div>
+                        <div class="deadline-warning">
+                            *납부기한까지 입찰보증금(입찰수수료가 있는 경우 동 수수료 포함)을 납부하지 않는 경우에는 제출된 입찰서는 '무효'처리됩니다.
+                        </div>
+                    </div>
+                    <div class="payment-deadline" th:if="${auction == null or auction.endDate == null}">
+                        <div class="deadline-label">납부기한</div>
+                        <div class="deadline-date">입찰기간 내 납부</div>
+                        <div class="deadline-warning">
+                            *납부기한까지 입찰보증금(입찰수수료가 있는 경우 동 수수료 포함)을 납부하지 않는 경우에는 제출된 입찰서는 '무효'처리됩니다.
+                        </div>
+                    </div>
+                    
+                    <!-- 환불계좌정보 -->
+                    <div style="margin-top: 20px;">
+                        <div class="info-label" style="display: inline-block; margin-bottom: 10px;">환불계좌정보</div>
+                        <div class="info-value" th:if="${refundBank != null and refundAccountNumber != null and refundAccountHolder != null}"
+                             th:with="bankName=${refundBank == 'shinhan' ? '신한은행' : (refundBank == 'busan' ? '부산은행' : (refundBank == 'woori' ? '우리은행' : (refundBank == 'ibk' ? '기업은행' : (refundBank == 'hana' ? '하나은행' : (refundBank == 'kb' ? '국민은행' : (refundBank == 'nh' ? '농협은행' : refundBank))))))}, accountInfo=${bankName} + ' ' + ${refundAccountNumber} + ' (예금주 : ' + ${refundAccountHolder} + ')'"
+                             th:text="${accountInfo}">신한은행 34602231765 (예금주 : 오단너)</div>
+                        <div class="info-value" th:unless="${refundBank != null and refundAccountNumber != null and refundAccountHolder != null}">환불계좌 정보가 없습니다.</div>
+                    </div>
+                </div>
+
+                <!-- 보증금 납부 주의 사항 -->
+                <div class="collapsible-section">
+                    <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                        <span class="collapsible-title">보증금 납부 주의 사항 확인</span>
+                        <i class="fas fa-chevron-down collapsible-icon"></i>
+                    </div>
+                    <div class="collapsible-content">
+                        <ul style="line-height: 2; color: #666;">
+                            <li>입찰보증금은 납부기한 내에 반드시 납부해야 합니다.</li>
+                            <li>납부기한을 지나면 입찰서가 무효 처리됩니다.</li>
+                            <li>가상계좌로 입금 시 입금자명을 정확히 입력해주세요.</li>
+                            <li>입금 확인은 영업일 기준 1-2일 소요될 수 있습니다.</li>
+                            <li>문의사항은 고객센터로 연락주시기 바랍니다.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 입찰관련 제출서류 안내 -->
+                <div class="collapsible-section">
+                    <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                        <span class="collapsible-title">입찰관련 제출서류 안내</span>
+                        <i class="fas fa-chevron-down collapsible-icon"></i>
+                    </div>
+                    <div class="collapsible-content">
+                        <ul style="line-height: 2; color: #666;">
+                            <li>대리입찰의 경우 관련 서류를 제출해야 합니다.</li>
+                            <li>서류 제출은 입찰기관에서 요구하는 서류를 준비하여 제출하시기 바랍니다.</li>
+                            <li>서류 미제출 시 입찰이 무효 처리될 수 있습니다.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button type="button" class="btn btn-primary" th:onclick="'goToPayment(' + ${payment != null ? payment.id : 'null'} + ')'">결제하기</button>
+                    <button type="button" class="btn btn-primary" onclick="location.href='/payment/my-payments'">입찰서내역목록보기</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 푸터 -->
+    <div th:replace="~{layout/footer :: footer}"></div>
+
+    <script>
+        function toggleCollapsible(header) {
+            const content = header.nextElementSibling;
+            header.classList.toggle('active');
+            content.classList.toggle('active');
+        }
+
+        function goToPayment(paymentId) {
+            if (!paymentId) {
+                alert('결제 정보를 찾을 수 없습니다.');
+                return;
+            }
+
+            // paymentId를 파라미터로 전달하여 결제 페이지에서 조회
+            const url = '/payment/checkout?paymentId=' + paymentId;
+            window.location.href = url;
+        }
+    </script>
+</body>
+</html>
