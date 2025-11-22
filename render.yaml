@@ -5,17 +5,15 @@ services:
     env: java
     region: singapore  # 또는 원하는 리전 (oregon, frankfurt 등)
     plan: starter  # 또는 free (제한 있음)
-    buildCommand: chmod +x ./gradlew && ./gradlew clean build -x test
-    startCommand: java -Djava.security.egd=file:/dev/./urandom -jar build/libs/PublicApiProj-0.0.1-SNAPSHOT.jar
+    runtime: java-21  # Java 21 명시
+    buildCommand: chmod +x ./gradlew && ./gradlew clean bootJar -x test
+    startCommand: java -Dserver.port=$PORT -Djava.security.egd=file:/dev/./urandom -jar build/libs/PublicApiProj-0.0.1-SNAPSHOT.jar
     healthCheckPath: /
     envVars:
       # Spring Profile 설정
       - key: SPRING_PROFILES_ACTIVE
         value: prod
-      # 포트 설정 (렌더는 PORT 환경 변수 제공)
-      - key: SERVER_PORT
-        valueFrom:
-          envVarKey: PORT
+      # 주의: PORT 환경 변수는 렌더가 자동으로 제공하므로 별도 설정 불필요
       # 데이터베이스 설정 (렌더 대시보드에서 수동 설정 필요)
       - key: SPRING_DATASOURCE_URL
         sync: false
