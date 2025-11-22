@@ -1,0 +1,39 @@
+services:
+  # Spring Boot 웹 서비스
+  - type: web
+    name: public-api-proj
+    env: java
+    region: singapore  # 또는 원하는 리전 (oregon, frankfurt 등)
+    plan: starter  # 또는 free (제한 있음)
+    buildCommand: chmod +x ./gradlew && ./gradlew clean build -x test
+    startCommand: java -Djava.security.egd=file:/dev/./urandom -jar build/libs/PublicApiProj-0.0.1-SNAPSHOT.jar
+    healthCheckPath: /
+    envVars:
+      # Spring Profile 설정
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      # 포트 설정 (렌더는 PORT 환경 변수 제공)
+      - key: SERVER_PORT
+        valueFrom:
+          envVarKey: PORT
+      # 데이터베이스 설정 (렌더 대시보드에서 수동 설정 필요)
+      - key: SPRING_DATASOURCE_URL
+        sync: false
+      - key: SPRING_DATASOURCE_USERNAME
+        sync: false
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
+      # 이메일 설정 (선택)
+      - key: SPRING_MAIL_USERNAME
+        sync: false
+      - key: SPRING_MAIL_PASSWORD
+        sync: false
+      # 아임포트 설정 (선택)
+      - key: IAMPORT_IMP_CODE
+        sync: false
+      - key: IAMPORT_API_KEY
+        sync: false
+      - key: IAMPORT_API_SECRET
+        sync: false
+      - key: IAMPORT_CALLBACK_URL
+        sync: false
