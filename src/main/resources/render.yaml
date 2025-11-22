@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: side-proj
+    env: java
+    buildCommand: "./gradlew build"
+    startCommand: "java -jar build/libs/*.jar"
+    plan: free
