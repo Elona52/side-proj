@@ -28,5 +28,6 @@ COPY --from=build /app/build/libs/PublicApiProj-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8080
 
 # 애플리케이션 실행 (쉘 형태로 변경하여 환경 변수 사용)
-ENTRYPOINT ["sh", "-c", "java -Djava.security.egd=file:/dev/./urandom -Dserver.port=${PORT:-8080} -jar app.jar"]
+# SPRING_PROFILES_ACTIVE는 Render 환경 변수에서 설정됨
+ENTRYPOINT ["sh", "-c", "java -Djava.security.egd=file:/dev/./urandom -Dserver.port=${PORT:-8080} -Dspring.profiles.active=${SPRING_PROFILES_ACTIVE:-prod} -jar app.jar"]
 

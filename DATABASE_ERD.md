@@ -1,5 +1,14 @@
 # 데이터베이스 ERD (Entity Relationship Diagram)
 
+## 📊 전체 ERD
+
+ERD 다이어그램은 별도 파일로 분리되었습니다: [DATABASE_ERD.mmd](./DATABASE_ERD.mmd)
+
+Mermaid 다이어그램을 보려면:
+- GitHub에서 자동으로 렌더링됩니다
+- VS Code에서 Mermaid 확장 프로그램을 설치하면 미리보기 가능합니다
+- 온라인 Mermaid 에디터에서 열어볼 수 있습니다: https://mermaid.live/
+
 ## 📋 테이블 목록
 
 ### 1. 회원 관련

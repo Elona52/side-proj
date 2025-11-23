@@ -47,7 +47,7 @@ public interface KamcoItemMapper {
     /**
      * 신규 물건 조회
      */
-    @Select("SELECT * FROM KNKamcoItem WHERE is_new = 1 AND is_active = 1 AND COALESCE(uscb_cnt, 0) = 0 " +
+    @Select("SELECT * FROM KNKamcoItem WHERE is_new = 1 AND is_active = 1 AND IFNULL(uscb_cnt, 0) = 0 " +
             "ORDER BY created_date DESC LIMIT #{limit}")
     List<KamcoItem> findNewItems(@Param("limit") int limit);
 
@@ -57,7 +57,7 @@ public interface KamcoItemMapper {
     @Select({
         "<script>",
         "SELECT * FROM KNKamcoItem",
-        "WHERE is_new = 1 AND is_active = 1 AND COALESCE(uscb_cnt, 0) = 0",
+        "WHERE is_new = 1 AND is_active = 1 AND IFNULL(uscb_cnt, 0) = 0",
         "<if test='sido != null and sido != \"\" and sido != \"all\"'>",
         "  AND sido = #{sido}",
         "</if>",
@@ -70,7 +70,7 @@ public interface KamcoItemMapper {
      * 당일 매각 예정 물건 조회
      */
     @Select("SELECT * FROM KNKamcoItem WHERE is_active = 1 " +
-            "AND DATE(TO_TIMESTAMP(pbct_cls_dtm, 'YYYYMMDDHH24MISS')) = CURRENT_DATE " +
+            "AND DATE(STR_TO_DATE(pbct_cls_dtm, '%Y%m%d%H%i%s')) = CURDATE() " +
             "ORDER BY pbct_cls_dtm ASC")
     List<KamcoItem> findTodayClosingItems();
     
@@ -119,8 +119,6 @@ public interface KamcoItemMapper {
     
     /**
      * 삽입 (중복 시 업데이트)
-     * PostgreSQL: ON CONFLICT 사용
-     * MySQL/MariaDB: ON DUPLICATE KEY UPDATE 사용
      */
     @Insert("INSERT INTO KNKamcoItem(" +
             "rnum, plnm_no, pbct_no, org_base_no, org_nm, cltr_no, pbct_cdtn_no, cltr_mnmt_no, cltr_hstr_no, bid_mnmt_no, " +
@@ -141,21 +139,21 @@ public interface KamcoItemMapper {
             "#{minBidPrc}, #{apslAsesAvgAmt}, #{feeRate}, " +
             "#{pbctBegnDtm}, #{pbctClsDtm}, " +
             "#{pbctCltrStatNm}, #{uscbCnt}, #{iqryCnt}, " +
-            "#{isNew}, #{isActive}, CURRENT_TIMESTAMP" +
-            ") ON CONFLICT (cltr_no) DO UPDATE SET " +
-            "rnum=EXCLUDED.rnum, plnm_no=EXCLUDED.plnm_no, pbct_no=EXCLUDED.pbct_no, " +
-            "org_base_no=EXCLUDED.org_base_no, org_nm=EXCLUDED.org_nm, " +
-            "pbct_cdtn_no=EXCLUDED.pbct_cdtn_no, cltr_mnmt_no=EXCLUDED.cltr_mnmt_no, " +
-            "cltr_hstr_no=EXCLUDED.cltr_hstr_no, bid_mnmt_no=EXCLUDED.bid_mnmt_no, " +
-            "scrn_grp_cd=EXCLUDED.scrn_grp_cd, ctgr_id=EXCLUDED.ctgr_id, ctgr_full_nm=EXCLUDED.ctgr_full_nm, " +
-            "cltr_nm=EXCLUDED.cltr_nm, goods_nm=EXCLUDED.goods_nm, manf=EXCLUDED.manf, " +
-            "ldnm_adrs=EXCLUDED.ldnm_adrs, nmrd_adrs=EXCLUDED.nmrd_adrs, " +
-            "rod_nm=EXCLUDED.rod_nm, bld_no=EXCLUDED.bld_no, sido=EXCLUDED.sido, " +
-            "dpsl_mtd_cd=EXCLUDED.dpsl_mtd_cd, dpsl_mtd_nm=EXCLUDED.dpsl_mtd_nm, bid_mtd_nm=EXCLUDED.bid_mtd_nm, " +
-            "min_bid_prc=EXCLUDED.min_bid_prc, apsl_ases_avg_amt=EXCLUDED.apsl_ases_avg_amt, fee_rate=EXCLUDED.fee_rate, " +
-            "pbct_begn_dtm=EXCLUDED.pbct_begn_dtm, pbct_cls_dtm=EXCLUDED.pbct_cls_dtm, " +
-            "pbct_cltr_stat_nm=EXCLUDED.pbct_cltr_stat_nm, uscb_cnt=EXCLUDED.uscb_cnt, iqry_cnt=EXCLUDED.iqry_cnt, " +
-            "is_active=EXCLUDED.is_active, api_sync_date=CURRENT_TIMESTAMP")
+            "#{isNew}, #{isActive}, NOW()" +
+            ") ON DUPLICATE KEY UPDATE " +
+            "rnum=VALUES(rnum), plnm_no=VALUES(plnm_no), pbct_no=VALUES(pbct_no), " +
+            "org_base_no=VALUES(org_base_no), org_nm=VALUES(org_nm), " +
+            "pbct_cdtn_no=VALUES(pbct_cdtn_no), cltr_mnmt_no=VALUES(cltr_mnmt_no), " +
+            "cltr_hstr_no=VALUES(cltr_hstr_no), bid_mnmt_no=VALUES(bid_mnmt_no), " +
+            "scrn_grp_cd=VALUES(scrn_grp_cd), ctgr_id=VALUES(ctgr_id), ctgr_full_nm=VALUES(ctgr_full_nm), " +
+            "cltr_nm=VALUES(cltr_nm), goods_nm=VALUES(goods_nm), manf=VALUES(manf), " +
+            "ldnm_adrs=VALUES(ldnm_adrs), nmrd_adrs=VALUES(nmrd_adrs), " +
+            "rod_nm=VALUES(rod_nm), bld_no=VALUES(bld_no), sido=VALUES(sido), " +
+            "dpsl_mtd_cd=VALUES(dpsl_mtd_cd), dpsl_mtd_nm=VALUES(dpsl_mtd_nm), bid_mtd_nm=VALUES(bid_mtd_nm), " +
+            "min_bid_prc=VALUES(min_bid_prc), apsl_ases_avg_amt=VALUES(apsl_ases_avg_amt), fee_rate=VALUES(fee_rate), " +
+            "pbct_begn_dtm=VALUES(pbct_begn_dtm), pbct_cls_dtm=VALUES(pbct_cls_dtm), " +
+            "pbct_cltr_stat_nm=VALUES(pbct_cltr_stat_nm), uscb_cnt=VALUES(uscb_cnt), iqry_cnt=VALUES(iqry_cnt), " +
+            "is_active=VALUES(is_active), api_sync_date=NOW()")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insertOrUpdate(KamcoItem item);
     
@@ -205,23 +203,23 @@ public interface KamcoItemMapper {
      * 신규 물건 플래그 해제
      */
     @Update("UPDATE KNKamcoItem SET is_new = 0 WHERE is_new = 1 " +
-            "AND created_date < NOW() - INTERVAL '7 days'")
+            "AND created_date < DATE_SUB(NOW(), INTERVAL 7 DAY)")
     void unmarkOldNewItems();
     
     /**
      * 종료된 물건 비활성화
      */
     @Update("UPDATE KNKamcoItem SET is_active = 0 WHERE is_active = 1 " +
-            "AND TO_TIMESTAMP(pbct_cls_dtm, 'YYYYMMDDHH24MISS') < NOW()")
+            "AND STR_TO_DATE(pbct_cls_dtm, '%Y%m%d%H%i%s') < NOW()")
     void deactivateExpiredItems();
     
     /**
      * 검색 (물건명, 주소)
      */
     @Select("SELECT * FROM KNKamcoItem WHERE is_active = 1 " +
-            "AND (cltr_nm LIKE '%' || #{keyword} || '%' " +
-            "OR ldnm_adrs LIKE '%' || #{keyword} || '%' " +
-            "OR nmrd_adrs LIKE '%' || #{keyword} || '%') " +
+            "AND (cltr_nm LIKE CONCAT('%', #{keyword}, '%') " +
+            "OR ldnm_adrs LIKE CONCAT('%', #{keyword}, '%') " +
+            "OR nmrd_adrs LIKE CONCAT('%', #{keyword}, '%')) " +
             "ORDER BY created_date DESC LIMIT #{limit}")
     List<KamcoItem> searchByKeyword(@Param("keyword") String keyword, @Param("limit") int limit);
 }

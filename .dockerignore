@@ -1,0 +1,35 @@
+# Git
+.git
+.gitignore
+
+# Gradle
+.gradle
+build/
+!build/libs/*.jar
+
+# IDE
+.idea
+.vscode
+*.iml
+*.ipr
+*.iws
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Documentation
+*.md
+!README.md
+
+# Test files
+src/test
+
+# Temporary files
+*.tmp
+*.bak
+*~
+

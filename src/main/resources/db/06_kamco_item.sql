@@ -3,9 +3,8 @@
 -- =====================================================
 
 -- 캠코 온비드 공매 물건 테이블 (온비드 API 데이터 저장)
--- PostgreSQL 호환: AUTO_INCREMENT → BIGSERIAL
 CREATE TABLE IF NOT EXISTS KNKamcoItem (
-    id BIGSERIAL PRIMARY KEY,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '물건 ID',
     
     -- 기본 식별 정보
     rnum INT COMMENT '순번 (admin-panel에서 사용)',
@@ -60,29 +59,26 @@ CREATE TABLE IF NOT EXISTS KNKamcoItem (
     interest_count INT DEFAULT 0 COMMENT '관심수 (즐겨찾기 수)',
     
     -- API 데이터 동기화 정보
-    -- PostgreSQL 호환: TINYINT(1) → BOOLEAN
-    is_new BOOLEAN DEFAULT true,
-    is_active BOOLEAN DEFAULT true,
-    api_sync_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_new TINYINT(1) DEFAULT 1 COMMENT '신규 물건 여부',
+    is_active TINYINT(1) DEFAULT 1 COMMENT '활성화 여부',
+    api_sync_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'API 동기화 일시',
     
     -- 관리 일시
-    -- PostgreSQL 호환: ON UPDATE CURRENT_TIMESTAMP 제거 (트리거 필요하지만 일단 제거)
-    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- PostgreSQL 호환: 인덱스는 별도로 생성
-CREATE INDEX IF NOT EXISTS idx_cltr_no ON KNKamcoItem(cltr_no);
-CREATE INDEX IF NOT EXISTS idx_pbct_cls_dtm ON KNKamcoItem(pbct_cls_dtm);
-CREATE INDEX IF NOT EXISTS idx_sido ON KNKamcoItem(sido);
-CREATE INDEX IF NOT EXISTS idx_is_new ON KNKamcoItem(is_new);
-CREATE INDEX IF NOT EXISTS idx_view_count ON KNKamcoItem(view_count);
-CREATE INDEX IF NOT EXISTS idx_interest_count ON KNKamcoItem(interest_count);
-CREATE INDEX IF NOT EXISTS idx_min_bid_prc ON KNKamcoItem(min_bid_prc);
+    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '생성일',
+    updated_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '수정일',
+    
+    INDEX idx_cltr_no (cltr_no),
+    INDEX idx_pbct_cls_dtm (pbct_cls_dtm),
+    INDEX idx_sido (sido),
+    INDEX idx_is_new (is_new),
+    INDEX idx_view_count (view_count),
+    INDEX idx_interest_count (interest_count),
+    INDEX idx_min_bid_prc (min_bid_prc)
+) COMMENT '캠코 온비드 공매 물건';
 
 -- 캠코 온비드 공매 물건 조회 이력 테이블
 CREATE TABLE IF NOT EXISTS KNKamcoItemViewLog (
-    id BIGSERIAL PRIMARY KEY,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '조회 로그 ID',
     item_id BIGINT NOT NULL COMMENT '물건 ID',
     cltr_no VARCHAR(100) NOT NULL COMMENT '물건번호',
     member_id VARCHAR(50) COMMENT '회원 ID (비회원은 NULL)',
@@ -90,36 +86,34 @@ CREATE TABLE IF NOT EXISTS KNKamcoItemViewLog (
     user_agent TEXT COMMENT 'User Agent',
     view_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '조회일시',
     
-    FOREIGN KEY (item_id) REFERENCES KNKamcoItem(id) ON DELETE CASCADE
-);
-
-CREATE INDEX IF NOT EXISTS idx_item_id ON KNKamcoItemViewLog(item_id);
-CREATE INDEX IF NOT EXISTS idx_view_date ON KNKamcoItemViewLog(view_date);
+    FOREIGN KEY (item_id) REFERENCES KNKamcoItem(id) ON DELETE CASCADE,
+    INDEX idx_item_id (item_id),
+    INDEX idx_view_date (view_date)
+) COMMENT '물건 조회 이력';
 
 -- 새로운 물건 공지사항 테이블
 CREATE TABLE IF NOT EXISTS KNNewItemNotification (
-    id BIGSERIAL PRIMARY KEY,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '공지 ID',
     item_id BIGINT NOT NULL COMMENT '물건 ID',
     cltr_no VARCHAR(100) NOT NULL COMMENT '물건번호',
     cltr_nm VARCHAR(500) COMMENT '물건명',
     min_bid_prc BIGINT COMMENT '최저입찰가',
     pbct_cls_dtm VARCHAR(20) COMMENT '입찰종료일시',
-    notification_type VARCHAR(20) DEFAULT 'NEW',
-    is_displayed BOOLEAN DEFAULT true,
+    notification_type VARCHAR(20) DEFAULT 'NEW' COMMENT '공지 타입 (NEW, PRICE_DROP, DEADLINE)',
+    is_displayed TINYINT(1) DEFAULT 1 COMMENT '메인에 표시 여부',
     display_order INT DEFAULT 0 COMMENT '표시 순서',
     created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '생성일',
     expired_date TIMESTAMP COMMENT '공지 만료일',
     
-    FOREIGN KEY (item_id) REFERENCES KNKamcoItem(id) ON DELETE CASCADE
-);
-
-CREATE INDEX IF NOT EXISTS idx_is_displayed ON KNNewItemNotification(is_displayed);
-CREATE INDEX IF NOT EXISTS idx_created_date ON KNNewItemNotification(created_date);
-CREATE INDEX IF NOT EXISTS idx_notification_type ON KNNewItemNotification(notification_type);
+    FOREIGN KEY (item_id) REFERENCES KNKamcoItem(id) ON DELETE CASCADE,
+    INDEX idx_is_displayed (is_displayed),
+    INDEX idx_created_date (created_date),
+    INDEX idx_notification_type (notification_type)
+) COMMENT '신규 물건 공지';
 
 -- 물건 통계 스냅샷 테이블 (일별/주별 통계용)
 CREATE TABLE IF NOT EXISTS KNKamcoItemStats (
-    id BIGSERIAL PRIMARY KEY,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '통계 ID',
     item_id BIGINT NOT NULL COMMENT '물건 ID',
     cltr_no VARCHAR(100) NOT NULL COMMENT '물건번호',
     stat_date DATE NOT NULL COMMENT '통계 날짜',
@@ -128,8 +122,7 @@ CREATE TABLE IF NOT EXISTS KNKamcoItemStats (
     created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '생성일',
     
     FOREIGN KEY (item_id) REFERENCES KNKamcoItem(id) ON DELETE CASCADE,
-    UNIQUE (item_id, stat_date)
-);
-
-CREATE INDEX IF NOT EXISTS idx_stat_date ON KNKamcoItemStats(stat_date);
+    UNIQUE KEY unique_item_stat (item_id, stat_date),
+    INDEX idx_stat_date (stat_date)
+) COMMENT '물건 통계 스냅샷';
 
