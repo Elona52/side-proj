@@ -70,7 +70,8 @@ public class SecurityConfig {
                             "/api/all",
                             "/api/new",
                             "/api/today-closing",
-                            "/api/main-data"
+                            "/api/main-data",
+                            "/kamco-items/**"
                         );
                 })
                 // 인가 설정
@@ -88,8 +89,9 @@ public class SecurityConfig {
                         "/css/**", "/js/**", "/img/**", "/static/**",
                         "/error", "/favicon.ico"
                     ).permitAll()
-                    // 모든 GET 요청은 공개 (읽기 전용)
+                    // 공개 API 경로 (읽기 전용 GET 요청)
                     .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/**").permitAll()
+                    .requestMatchers(org.springframework.http.HttpMethod.GET, "/kamco-items/**").permitAll()
                     // 쓰기 작업은 인증 필요 (POST, PUT, DELETE, PATCH) - 세션 인증 필터가 처리
                     .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/**").authenticated()
                     .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/**").authenticated()
@@ -97,6 +99,7 @@ public class SecurityConfig {
                     .requestMatchers(org.springframework.http.HttpMethod.PATCH, "/api/**").authenticated()
                     // 나머지 /api/** 경로도 공개 (OPTIONS 등)
                     .requestMatchers("/api/**").permitAll()
+                    .requestMatchers("/kamco-items/**").permitAll()
                     // 기타 모든 요청은 인증 필요
                     .anyRequest().authenticated()
                 )

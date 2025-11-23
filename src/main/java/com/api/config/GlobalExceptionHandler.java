@@ -7,6 +7,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -61,10 +62,45 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * 정적 리소스 없음 예외 처리 (무시)
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Void> handleNoResourceFoundException(NoResourceFoundException e) {
+        // favicon.ico, common.css 등 정적 리소스 오류는 무시
+        String resourcePath = e.getResourcePath();
+        if (resourcePath != null && (
+            resourcePath.contains("favicon.ico") || 
+            resourcePath.contains("common.css") ||
+            resourcePath.endsWith(".ico") ||
+            resourcePath.endsWith(".css")
+        )) {
+            // 정적 리소스 오류는 조용히 무시
+            return ResponseEntity.notFound().build();
+        }
+        // 다른 리소스 오류는 로깅
+        log.warn("리소스를 찾을 수 없음: {}", resourcePath);
+        return ResponseEntity.notFound().build();
+    }
+
+    /**
      * 일반 예외 처리
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleException(Exception e) {
+        // 정적 리소스 오류는 무시
+        if (e instanceof NoResourceFoundException) {
+            NoResourceFoundException nrfe = (NoResourceFoundException) e;
+            String resourcePath = nrfe.getResourcePath();
+            if (resourcePath != null && (
+                resourcePath.contains("favicon.ico") || 
+                resourcePath.contains("common.css") ||
+                resourcePath.endsWith(".ico") ||
+                resourcePath.endsWith(".css")
+            )) {
+                return ResponseEntity.notFound().build();
+            }
+        }
+        
         log.error("예외 발생: {}", e.getMessage(), e);
         Map<String, Object> response = new HashMap<>();
         response.put("error", "서버 오류가 발생했습니다.");
