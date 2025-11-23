@@ -239,7 +239,9 @@ public class AuctionService {
 	
 	/**
 	 * 메인 페이지 데이터 준비
+	 * 각 쿼리를 독립적으로 실행하여 하나의 실패가 전체를 막지 않도록 함
 	 */
+	@Transactional(propagation = org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED)
 	public Map<String, Object> prepareMainPageData() {
 		Map<String, Object> data = new HashMap<>();
 		
