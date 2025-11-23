@@ -91,12 +91,10 @@ public class SecurityConfig {
                     // 모든 GET 요청은 공개 (읽기 전용)
                     .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/**").permitAll()
                     // 쓰기 작업은 인증 필요 (POST, PUT, DELETE, PATCH) - 세션 인증 필터가 처리
-                    .requestMatchers(
-                        org.springframework.http.HttpMethod.POST,
-                        org.springframework.http.HttpMethod.PUT,
-                        org.springframework.http.HttpMethod.DELETE,
-                        org.springframework.http.HttpMethod.PATCH
-                    ).authenticated()
+                    .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/**").authenticated()
+                    .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/**").authenticated()
+                    .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/**").authenticated()
+                    .requestMatchers(org.springframework.http.HttpMethod.PATCH, "/api/**").authenticated()
                     // 나머지 /api/** 경로도 공개 (OPTIONS 등)
                     .requestMatchers("/api/**").permitAll()
                     // 기타 모든 요청은 인증 필요
