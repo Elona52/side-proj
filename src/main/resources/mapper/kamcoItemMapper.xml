@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="com.api.item.mapper.KamcoItemMapper">
+
+    <!-- 신규 물건 조회 (MariaDB/MySQL) -->
+    <select id="findNewItems" databaseId="mysql" resultType="com.api.item.domain.KamcoItem">
+        SELECT * FROM KNKamcoItem 
+        WHERE is_new = 1 AND is_active = 1 AND IFNULL(uscb_cnt, 0) = 0 
+        ORDER BY created_date DESC 
+        LIMIT #{limit}
+    </select>
+    
+    <!-- 신규 물건 조회 (PostgreSQL) -->
+    <select id="findNewItems" databaseId="postgresql" resultType="com.api.item.domain.KamcoItem">
+        SELECT * FROM "KNKamcoItem" 
+        WHERE is_new = true AND is_active = true AND COALESCE(uscb_cnt, 0) = 0 
+        ORDER BY created_date DESC 
+        LIMIT #{limit}
+    </select>
+
+    <!-- 신규 물건 조회 - 시도 필터 (MariaDB/MySQL) -->
+    <select id="findNewItemsBySido" databaseId="mysql" resultType="com.api.item.domain.KamcoItem">
+        SELECT * FROM KNKamcoItem
+        WHERE is_new = 1 AND is_active = 1 AND IFNULL(uscb_cnt, 0) = 0
+        <if test='sido != null and sido != "" and sido != "all"'>
+            AND sido = #{sido}
+        </if>
+        ORDER BY created_date DESC
+    </select>
+    
+    <!-- 신규 물건 조회 - 시도 필터 (PostgreSQL) -->
+    <select id="findNewItemsBySido" databaseId="postgresql" resultType="com.api.item.domain.KamcoItem">
+        SELECT * FROM "KNKamcoItem"
+        WHERE is_new = true AND is_active = true AND COALESCE(uscb_cnt, 0) = 0
+        <if test='sido != null and sido != "" and sido != "all"'>
+            AND sido = #{sido}
+        </if>
+        ORDER BY created_date DESC
+    </select>
+
+    <!-- 당일 매각 예정 물건 조회 (MariaDB/MySQL) -->
+    <select id="findTodayClosingItems" databaseId="mysql" resultType="com.api.item.domain.KamcoItem">
+        SELECT * FROM KNKamcoItem 
+        WHERE is_active = 1 
+        AND DATE(STR_TO_DATE(pbct_cls_dtm, '%Y%m%d%H%i%s')) = CURDATE() 
+        ORDER BY pbct_cls_dtm ASC
+    </select>
+    
+    <!-- 당일 매각 예정 물건 조회 (PostgreSQL) -->
+    <select id="findTodayClosingItems" databaseId="postgresql" resultType="com.api.item.domain.KamcoItem">
+        SELECT * FROM "KNKamcoItem" 
+        WHERE is_active = true 
+        AND DATE(TO_TIMESTAMP(pbct_cls_dtm, 'YYYYMMDDHH24MISS')) = CURRENT_DATE 
+        ORDER BY pbct_cls_dtm ASC
+    </select>
+
+    <!-- 50% 체감 물건 조회 (MariaDB/MySQL) -->
+    <select id="find50PercentDiscountItems" databaseId="mysql" resultType="com.api.item.domain.KamcoItem">
+        SELECT * FROM KNKamcoItem 
+        WHERE is_active = 1 AND uscb_cnt >= 3 
+        ORDER BY uscb_cnt DESC, min_bid_prc ASC 
+        LIMIT #{limit}
+    </select>
+    
+    <!-- 50% 체감 물건 조회 (PostgreSQL) -->
+    <select id="find50PercentDiscountItems" databaseId="postgresql" resultType="com.api.item.domain.KamcoItem">
+        SELECT * FROM "KNKamcoItem" 
+        WHERE is_active = true AND uscb_cnt >= 3 
+        ORDER BY uscb_cnt DESC, min_bid_prc ASC 
+        LIMIT #{limit}
+    </select>
+
+    <!-- 50% 체감 물건 조회 - 시도 필터 (MariaDB/MySQL) -->
+    <select id="find50PercentDiscountItemsBySido" databaseId="mysql" resultType="com.api.item.domain.KamcoItem">
+        SELECT * FROM KNKamcoItem
+        WHERE is_active = 1 AND uscb_cnt >= 3
+        <if test='sido != null and sido != "" and sido != "all"'>
+            AND sido = #{sido}
+        </if>
+        ORDER BY uscb_cnt DESC, min_bid_prc ASC
+    </select>
+    
+    <!-- 50% 체감 물건 조회 - 시도 필터 (PostgreSQL) -->
+    <select id="find50PercentDiscountItemsBySido" databaseId="postgresql" resultType="com.api.item.domain.KamcoItem">
+        SELECT * FROM "KNKamcoItem"
+        WHERE is_active = true AND uscb_cnt >= 3
+        <if test='sido != null and sido != "" and sido != "all"'>
+            AND sido = #{sido}
+        </if>
+        ORDER BY uscb_cnt DESC, min_bid_prc ASC
+    </select>
+
+    <!-- 검색 (MariaDB/MySQL) -->
+    <select id="searchByKeyword" databaseId="mysql" resultType="com.api.item.domain.KamcoItem">
+        SELECT * FROM KNKamcoItem 
+        WHERE is_active = 1 
+        AND (cltr_nm LIKE CONCAT('%', #{keyword}, '%') 
+        OR ldnm_adrs LIKE CONCAT('%', #{keyword}, '%') 
+        OR nmrd_adrs LIKE CONCAT('%', #{keyword}, '%')) 
+        ORDER BY created_date DESC 
+        LIMIT #{limit}
+    </select>
+    
+    <!-- 검색 (PostgreSQL) -->
+    <select id="searchByKeyword" databaseId="postgresql" resultType="com.api.item.domain.KamcoItem">
+        SELECT * FROM "KNKamcoItem" 
+        WHERE is_active = true 
+        AND (cltr_nm LIKE '%' || #{keyword} || '%' 
+        OR ldnm_adrs LIKE '%' || #{keyword} || '%' 
+        OR nmrd_adrs LIKE '%' || #{keyword} || '%') 
+        ORDER BY created_date DESC 
+        LIMIT #{limit}
+    </select>
+
+    <!-- 삽입 (중복 시 업데이트) - MariaDB/MySQL -->
+    <insert id="insertOrUpdate" databaseId="mysql" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO KNKamcoItem(
+            rnum, plnm_no, pbct_no, org_base_no, org_nm, cltr_no, pbct_cdtn_no, cltr_mnmt_no, cltr_hstr_no, bid_mnmt_no, 
+            scrn_grp_cd, ctgr_id, ctgr_full_nm, 
+            cltr_nm, goods_nm, manf, 
+            ldnm_adrs, nmrd_adrs, rod_nm, bld_no, sido, 
+            dpsl_mtd_cd, dpsl_mtd_nm, bid_mtd_nm, 
+            min_bid_prc, apsl_ases_avg_amt, fee_rate, 
+            pbct_begn_dtm, pbct_cls_dtm, 
+            pbct_cltr_stat_nm, uscb_cnt, iqry_cnt, 
+            is_new, is_active, api_sync_date
+        ) VALUES (
+            #{rnum}, #{plnmNo}, #{pbctNo}, #{orgBaseNo}, #{orgNm}, #{cltrNo}, #{pbctCdtnNo}, #{cltrMnmtNo}, #{cltrHstrNo}, #{bidMnmtNo}, 
+            #{scrnGrpCd}, #{ctgrId}, #{ctgrFullNm}, 
+            #{cltrNm}, #{goodsNm}, #{manf}, 
+            #{ldnmAdrs}, #{nmrdAdrs}, #{rodNm}, #{bldNo}, #{sido}, 
+            #{dpslMtdCd}, #{dpslMtdNm}, #{bidMtdNm}, 
+            #{minBidPrc}, #{apslAsesAvgAmt}, #{feeRate}, 
+            #{pbctBegnDtm}, #{pbctClsDtm}, 
+            #{pbctCltrStatNm}, #{uscbCnt}, #{iqryCnt}, 
+            #{isNew}, #{isActive}, NOW()
+        ) ON DUPLICATE KEY UPDATE 
+            rnum=VALUES(rnum), plnm_no=VALUES(plnm_no), pbct_no=VALUES(pbct_no), 
+            org_base_no=VALUES(org_base_no), org_nm=VALUES(org_nm), 
+            pbct_cdtn_no=VALUES(pbct_cdtn_no), cltr_mnmt_no=VALUES(cltr_mnmt_no), 
+            cltr_hstr_no=VALUES(cltr_hstr_no), bid_mnmt_no=VALUES(bid_mnmt_no), 
+            scrn_grp_cd=VALUES(scrn_grp_cd), ctgr_id=VALUES(ctgr_id), ctgr_full_nm=VALUES(ctgr_full_nm), 
+            cltr_nm=VALUES(cltr_nm), goods_nm=VALUES(goods_nm), manf=VALUES(manf), 
+            ldnm_adrs=VALUES(ldnm_adrs), nmrd_adrs=VALUES(nmrd_adrs), 
+            rod_nm=VALUES(rod_nm), bld_no=VALUES(bld_no), sido=VALUES(sido), 
+            dpsl_mtd_cd=VALUES(dpsl_mtd_cd), dpsl_mtd_nm=VALUES(dpsl_mtd_nm), bid_mtd_nm=VALUES(bid_mtd_nm), 
+            min_bid_prc=VALUES(min_bid_prc), apsl_ases_avg_amt=VALUES(apsl_ases_avg_amt), fee_rate=VALUES(fee_rate), 
+            pbct_begn_dtm=VALUES(pbct_begn_dtm), pbct_cls_dtm=VALUES(pbct_cls_dtm), 
+            pbct_cltr_stat_nm=VALUES(pbct_cltr_stat_nm), uscb_cnt=VALUES(uscb_cnt), iqry_cnt=VALUES(iqry_cnt), 
+            is_active=VALUES(is_active), api_sync_date=NOW()
+    </insert>
+    
+    <!-- 삽입 (중복 시 업데이트) - PostgreSQL -->
+    <insert id="insertOrUpdate" databaseId="postgresql" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO "KNKamcoItem"(
+            rnum, plnm_no, pbct_no, org_base_no, org_nm, cltr_no, pbct_cdtn_no, cltr_mnmt_no, cltr_hstr_no, bid_mnmt_no, 
+            scrn_grp_cd, ctgr_id, ctgr_full_nm, 
+            cltr_nm, goods_nm, manf, 
+            ldnm_adrs, nmrd_adrs, rod_nm, bld_no, sido, 
+            dpsl_mtd_cd, dpsl_mtd_nm, bid_mtd_nm, 
+            min_bid_prc, apsl_ases_avg_amt, fee_rate, 
+            pbct_begn_dtm, pbct_cls_dtm, 
+            pbct_cltr_stat_nm, uscb_cnt, iqry_cnt, 
+            is_new, is_active, api_sync_date
+        ) VALUES (
+            #{rnum}, #{plnmNo}, #{pbctNo}, #{orgBaseNo}, #{orgNm}, #{cltrNo}, #{pbctCdtnNo}, #{cltrMnmtNo}, #{cltrHstrNo}, #{bidMnmtNo}, 
+            #{scrnGrpCd}, #{ctgrId}, #{ctgrFullNm}, 
+            #{cltrNm}, #{goodsNm}, #{manf}, 
+            #{ldnmAdrs}, #{nmrdAdrs}, #{rodNm}, #{bldNo}, #{sido}, 
+            #{dpslMtdCd}, #{dpslMtdNm}, #{bidMtdNm}, 
+            #{minBidPrc}, #{apslAsesAvgAmt}, #{feeRate}, 
+            #{pbctBegnDtm}, #{pbctClsDtm}, 
+            #{pbctCltrStatNm}, #{uscbCnt}, #{iqryCnt}, 
+            #{isNew}, #{isActive}, CURRENT_TIMESTAMP
+        ) ON CONFLICT (cltr_no) DO UPDATE SET 
+            rnum=EXCLUDED.rnum, plnm_no=EXCLUDED.plnm_no, pbct_no=EXCLUDED.pbct_no, 
+            org_base_no=EXCLUDED.org_base_no, org_nm=EXCLUDED.org_nm, 
+            pbct_cdtn_no=EXCLUDED.pbct_cdtn_no, cltr_mnmt_no=EXCLUDED.cltr_mnmt_no, 
+            cltr_hstr_no=EXCLUDED.cltr_hstr_no, bid_mnmt_no=EXCLUDED.bid_mnmt_no, 
+            scrn_grp_cd=EXCLUDED.scrn_grp_cd, ctgr_id=EXCLUDED.ctgr_id, ctgr_full_nm=EXCLUDED.ctgr_full_nm, 
+            cltr_nm=EXCLUDED.cltr_nm, goods_nm=EXCLUDED.goods_nm, manf=EXCLUDED.manf, 
+            ldnm_adrs=EXCLUDED.ldnm_adrs, nmrd_adrs=EXCLUDED.nmrd_adrs, 
+            rod_nm=EXCLUDED.rod_nm, bld_no=EXCLUDED.bld_no, sido=EXCLUDED.sido, 
+            dpsl_mtd_cd=EXCLUDED.dpsl_mtd_cd, dpsl_mtd_nm=EXCLUDED.dpsl_mtd_nm, bid_mtd_nm=EXCLUDED.bid_mtd_nm, 
+            min_bid_prc=EXCLUDED.min_bid_prc, apsl_ases_avg_amt=EXCLUDED.apsl_ases_avg_amt, fee_rate=EXCLUDED.fee_rate, 
+            pbct_begn_dtm=EXCLUDED.pbct_begn_dtm, pbct_cls_dtm=EXCLUDED.pbct_cls_dtm, 
+            pbct_cltr_stat_nm=EXCLUDED.pbct_cltr_stat_nm, uscb_cnt=EXCLUDED.uscb_cnt, iqry_cnt=EXCLUDED.iqry_cnt, 
+            is_active=EXCLUDED.is_active, api_sync_date=CURRENT_TIMESTAMP
+    </insert>
+
+    <!-- 신규 물건 플래그 해제 (MariaDB/MySQL) -->
+    <update id="unmarkOldNewItems" databaseId="mysql">
+        UPDATE KNKamcoItem SET is_new = 0 WHERE is_new = 1 
+        AND created_date &lt; DATE_SUB(NOW(), INTERVAL 7 DAY)
+    </update>
+    
+    <!-- 신규 물건 플래그 해제 (PostgreSQL) -->
+    <update id="unmarkOldNewItems" databaseId="postgresql">
+        UPDATE "KNKamcoItem" SET is_new = false WHERE is_new = true 
+        AND created_date &lt; NOW() - INTERVAL '7 days'
+    </update>
+
+    <!-- 종료된 물건 비활성화 (MariaDB/MySQL) -->
+    <update id="deactivateExpiredItems" databaseId="mysql">
+        UPDATE KNKamcoItem SET is_active = 0 WHERE is_active = 1 
+        AND STR_TO_DATE(pbct_cls_dtm, '%Y%m%d%H%i%s') &lt; NOW()
+    </update>
+    
+    <!-- 종료된 물건 비활성화 (PostgreSQL) -->
+    <update id="deactivateExpiredItems" databaseId="postgresql">
+        UPDATE "KNKamcoItem" SET is_active = false WHERE is_active = true 
+        AND TO_TIMESTAMP(pbct_cls_dtm, 'YYYYMMDDHH24MISS') &lt; NOW()
+    </update>
+
+    <!-- 기본 CRUD 쿼리들도 PostgreSQL 호환 추가 -->
+    
+    <!-- 물건번호로 조회 (MariaDB/MySQL) -->
+    <select id="findByCltrNo" databaseId="mysql" resultType="com.api.item.domain.KamcoItem">
+        SELECT * FROM KNKamcoItem WHERE cltr_no = #{cltrNo}
+    </select>
+    
+    <!-- 물건번호로 조회 (PostgreSQL) -->
+    <select id="findByCltrNo" databaseId="postgresql" resultType="com.api.item.domain.KamcoItem">
+        SELECT * FROM "KNKamcoItem" WHERE cltr_no = #{cltrNo}
+    </select>
+
+    <!-- 공고번호로 조회 (MariaDB/MySQL) -->
+    <select id="findByPlnmNo" databaseId="mysql" resultType="com.api.item.domain.KamcoItem">
+        SELECT * FROM KNKamcoItem WHERE plnm_no = #{plnmNo} AND is_active = 1 ORDER BY created_date DESC LIMIT 1
+    </select>
+    
+    <!-- 공고번호로 조회 (PostgreSQL) -->
+    <select id="findByPlnmNo" databaseId="postgresql" resultType="com.api.item.domain.KamcoItem">
+        SELECT * FROM "KNKamcoItem" WHERE plnm_no = #{plnmNo} AND is_active = true ORDER BY created_date DESC LIMIT 1
+    </select>
+
+    <!-- 물건번호로 모든 입찰 이력 조회 (MariaDB/MySQL) -->
+    <select id="findAllByCltrNo" databaseId="mysql" resultType="com.api.item.domain.KamcoItem">
+        SELECT * FROM KNKamcoItem WHERE cltr_no = #{cltrNo} ORDER BY created_date DESC
+    </select>
+    
+    <!-- 물건번호로 모든 입찰 이력 조회 (PostgreSQL) -->
+    <select id="findAllByCltrNo" databaseId="postgresql" resultType="com.api.item.domain.KamcoItem">
+        SELECT * FROM "KNKamcoItem" WHERE cltr_no = #{cltrNo} ORDER BY created_date DESC
+    </select>
+
+    <!-- ID로 조회 (MariaDB/MySQL) -->
+    <select id="findById" databaseId="mysql" resultType="com.api.item.domain.KamcoItem">
+        SELECT * FROM KNKamcoItem WHERE id = #{id}
+    </select>
+    
+    <!-- ID로 조회 (PostgreSQL) -->
+    <select id="findById" databaseId="postgresql" resultType="com.api.item.domain.KamcoItem">
+        SELECT * FROM "KNKamcoItem" WHERE id = #{id}
+    </select>
+
+    <!-- 전체 조회 (MariaDB/MySQL) -->
+    <select id="findAll" databaseId="mysql" resultType="com.api.item.domain.KamcoItem">
+        SELECT * FROM KNKamcoItem WHERE is_active = 1 ORDER BY created_date DESC
+    </select>
+    
+    <!-- 전체 조회 (PostgreSQL) -->
+    <select id="findAll" databaseId="postgresql" resultType="com.api.item.domain.KamcoItem">
+        SELECT * FROM "KNKamcoItem" WHERE is_active = true ORDER BY created_date DESC
+    </select>
+
+    <!-- 클릭 TOP 20 (MariaDB/MySQL) -->
+    <select id="findTop20ByViews" databaseId="mysql" resultType="com.api.item.domain.KamcoItem">
+        SELECT * FROM KNKamcoItem WHERE is_active = 1 
+        ORDER BY view_count DESC, interest_count DESC LIMIT 20
+    </select>
+    
+    <!-- 클릭 TOP 20 (PostgreSQL) -->
+    <select id="findTop20ByViews" databaseId="postgresql" resultType="com.api.item.domain.KamcoItem">
+        SELECT * FROM "KNKamcoItem" WHERE is_active = true 
+        ORDER BY view_count DESC, interest_count DESC LIMIT 20
+    </select>
+
+    <!-- 관심 TOP 20 (MariaDB/MySQL) -->
+    <select id="findTop20ByInterest" databaseId="mysql" resultType="com.api.item.domain.KamcoItem">
+        SELECT * FROM KNKamcoItem WHERE is_active = 1 
+        ORDER BY interest_count DESC, view_count DESC LIMIT 20
+    </select>
+    
+    <!-- 관심 TOP 20 (PostgreSQL) -->
+    <select id="findTop20ByInterest" databaseId="postgresql" resultType="com.api.item.domain.KamcoItem">
+        SELECT * FROM "KNKamcoItem" WHERE is_active = true 
+        ORDER BY interest_count DESC, view_count DESC LIMIT 20
+    </select>
+
+    <!-- 시도별 조회 (MariaDB/MySQL) -->
+    <select id="findBySido" databaseId="mysql" resultType="com.api.item.domain.KamcoItem">
+        SELECT * FROM KNKamcoItem WHERE is_active = 1 AND sido = #{sido} 
+        ORDER BY created_date DESC
+    </select>
+    
+    <!-- 시도별 조회 (PostgreSQL) -->
+    <select id="findBySido" databaseId="postgresql" resultType="com.api.item.domain.KamcoItem">
+        SELECT * FROM "KNKamcoItem" WHERE is_active = true AND sido = #{sido} 
+        ORDER BY created_date DESC
+    </select>
+
+    <!-- 조회수 증가 (공통) -->
+    <update id="incrementViewCount">
+        UPDATE KNKamcoItem SET view_count = view_count + 1 WHERE id = #{id}
+    </update>
+
+    <!-- 관심수 증가 (공통) -->
+    <update id="incrementInterestCount">
+        UPDATE KNKamcoItem SET interest_count = interest_count + 1 WHERE cltr_no = #{cltrNo}
+    </update>
+
+    <!-- 관심수 감소 (공통) -->
+    <update id="decrementInterestCount">
+        UPDATE KNKamcoItem SET interest_count = interest_count - 1 WHERE cltr_no = #{cltrNo} AND interest_count > 0
+    </update>
+
+    <!-- 관심수 설정 (공통) -->
+    <update id="updateInterestCount">
+        UPDATE KNKamcoItem SET interest_count = #{score} WHERE cltr_no = #{cltrNo}
+    </update>
+
+    <!-- ID로 삭제 (공통) -->
+    <delete id="deleteById">
+        DELETE FROM KNKamcoItem WHERE id = #{id}
+    </delete>
+
+    <!-- 서울특별시가 아닌 데이터 삭제 (공통) -->
+    <delete id="deleteNonSeoulItems">
+        DELETE FROM KNKamcoItem WHERE sido != '서울특별시'
+    </delete>
+
+    <!-- 전체 데이터 삭제 (공통) -->
+    <delete id="deleteAll">
+        DELETE FROM KNKamcoItem
+    </delete>
+
+</mapper>
+
