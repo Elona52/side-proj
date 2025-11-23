@@ -77,12 +77,17 @@ public class SecurityConfig {
                         "/swagger-ui/**", "/api-docs/**",
                         "/payment/callback", "/payment/success", "/payment/fail",
                         "/kamco-items/**",
-                        // 공개 API 경로 (인증 불필요)
+                        // 공개 API 경로 (인증 불필요 - 읽기 전용)
                         "/api/auction-info/**",
                         "/api/discount-50",
                         "/api/sido/**",
                         "/api/search",
                         "/api/favorites/check",
+                        "/api/all",
+                        "/api/new",
+                        "/api/today-closing",
+                        "/api/main-data",
+                        "/api-item-detail",
                         "/css/**", "/js/**", "/img/**", "/static/**",
                         "/error", "/favicon.ico"
                     ).permitAll()
